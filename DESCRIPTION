@@ -1,0 +1,25 @@
+Package: Duet
+Title: Analysing Non-Verbal Communication in Dyadic Interactions from Video Data
+Version: 0.0.0.9000
+Authors@R: 
+    person("Themis", "Efthimiou", , "themiftw20@gmail.com", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-8458-5493"))
+Description: This R package facilitates researchers in analysing non-verbal communication by processing data extracted from video recordings of dyadic interactions. It supports integration with open source tools. Currently, limited to OpenPose converting its outputs into CSV format for further analysis. The package includes functions for data pre-processing, visualization, and computation of key motion indices such as velocity, acceleration, and jerkiness. By streamlining these tasks, the package enables efficient and effective analysis of non-verbal cues in paired interactions, aiding in a deeper understanding of human communication dynamics.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports: 
+    rjson, 
+    parallel, 
+    stringr, 
+    dplyr, 
+    ggplot2, 
+    tidyr, 
+    ggthemes, 
+    zoo, 
+    kza, 
+    signal, 
+    stats,
+    reshape2,
+    patchwork
