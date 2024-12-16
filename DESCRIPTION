@@ -23,3 +23,6 @@ Imports:
     stats,
     reshape2,
     patchwork
+Suggests: 
+    spelling
+Language: en-US
