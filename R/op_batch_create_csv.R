@@ -19,7 +19,7 @@
 #' op_batch_create_csv(input_base_path, output_base_path)
 #' }
 
-op_batch_create_csv <- function(input_base_path, output_base_path, include_filename = TRUE, include_labels = FALSE, overwrite = FALSE) {
+op_batch_create_csv <- function(input_base_path, output_base_path, include_filename = TRUE, include_labels = FALSE, frame_width = 1920, export_type = 'dyad', model = 'all', overwrite = FALSE) {
 
   # List all dyad directories in the input path
   dyad_dirs <- list.dirs(input_base_path, recursive = FALSE, full.names = TRUE)
@@ -52,7 +52,10 @@ op_batch_create_csv <- function(input_base_path, output_base_path, include_filen
       input_path = dyad_dir,
       output_path = output_path,
       include_filename = include_filename,
-      include_labels = include_labels
+      include_labels = include_labels,
+      frame_width = frame_width,
+      export_type = export_type,
+      model = model
     )
   }
 

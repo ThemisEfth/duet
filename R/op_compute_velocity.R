@@ -40,6 +40,10 @@ op_compute_velocity <- function(data, fps = NULL, video_duration = NULL, overwri
     y_suffixes <- sub("^y", "", y_columns)
     common_suffixes <- intersect(x_suffixes, y_suffixes)
 
+    if (length(common_suffixes) == 0) {
+      stop("Error in merge_xy calculations: Both x and y columns are required for merging, but no matching pairs were found.")
+    }
+
     for (suffix in common_suffixes) {
       x_col <- paste0("x", suffix)
       y_col <- paste0("y", suffix)

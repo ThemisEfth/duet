@@ -9,6 +9,9 @@ op_batch_create_csv(
   output_base_path,
   include_filename = TRUE,
   include_labels = FALSE,
+  frame_width = 1920,
+  export_type = "dyad",
+  model = "all",
   overwrite = FALSE
 )
 }

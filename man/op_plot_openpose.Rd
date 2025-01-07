@@ -66,6 +66,7 @@ data <- data.frame(
 
 # Plot the data for the specified frame
 op_plot_openpose(data = data, frame_num = 10, person = "both", lines = TRUE, keylabels = TRUE,
-                 label_type = "names", left_color = "green", right_color = "purple")
+                 label_type = "names", left_color = "green", right_color = "purple",
+                 background_color = "grey90")
 
 }

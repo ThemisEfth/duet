@@ -1,4 +1,4 @@
-Package: Duet
+Package: duet
 Title: Analysing Non-Verbal Communication in Dyadic Interactions from
     Video Data
 Version: 0.0.0.9000
@@ -33,12 +33,13 @@ Imports:
     tidyr,
     tools,
     utils,
-    zoo
+    zoo,
+    tidyselect
 Suggests: 
     spelling,
     testthat (>= 3.0.0)
+Config/testthat/edition: 3
 Encoding: UTF-8
 Language: en-US
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
-Config/testthat/edition: 3

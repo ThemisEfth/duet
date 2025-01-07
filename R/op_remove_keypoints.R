@@ -43,102 +43,97 @@ op_remove_keypoints <- function(df,
                                 remove_keypoints_missing_data = NULL,
                                 apply_removal_equally = TRUE) {
 
-  # Ensure logical inputs are either TRUE or FALSE, and not NULL
+  # Helper function to get related columns (confidence, x, and y)
+  get_related_columns <- function(cols) {
+    c(cols, gsub("^c", "x", cols), gsub("^c", "y", cols))
+  }
+
+  # Ensure logical inputs are either TRUE or FALSE
   remove_undetected_keypoints <- isTRUE(remove_undetected_keypoints)
   apply_removal_equally <- isTRUE(apply_removal_equally)
 
-  # Initial number of columns before any removal
-  initial_col_count <- ncol(df)
-
-  # List of columns to remove across all groups (used if apply_removal_equally = TRUE)
+  # List of columns to remove globally
   columns_to_remove <- c()
 
-  # Loop through each unique combination of person and region
+  # Loop through unique combinations of person and region
   unique_groups <- unique(df[, c("person", "region")])
 
   for (group in seq_len(nrow(unique_groups))) {
     person_value <- unique_groups[group, "person"]
     region_value <- unique_groups[group, "region"]
 
-    # Subset the data for this specific person and region
+    # Subset the data for this group
     group_data <- df[df$person == person_value & df$region == region_value, ]
-
-    # List of columns to remove for this group (used if apply_removal_equally = FALSE)
     group_columns_to_remove <- c()
 
-    # 1. Remove specified columns, if provided
+    # 1. Remove specified keypoints
     if (!is.null(remove_specific_keypoints)) {
-      remove_specific_keypoints <- remove_specific_keypoints[remove_specific_keypoints %in% names(group_data)]
+      specific_cols <- get_related_columns(remove_specific_keypoints)
+      specific_cols <- specific_cols[specific_cols %in% names(group_data)]
+
       if (apply_removal_equally) {
-        columns_to_remove <- unique(c(columns_to_remove, remove_specific_keypoints))
+        columns_to_remove <- unique(c(columns_to_remove, specific_cols))
       } else {
-        group_columns_to_remove <- unique(c(group_columns_to_remove, remove_specific_keypoints))
+        group_columns_to_remove <- unique(c(group_columns_to_remove, specific_cols))
       }
     }
 
-    # 2. Remove undetected keypoints (all-zero confidence) if remove_undetected_keypoints is TRUE
+    # 2. Remove undetected keypoints (all-zero confidence)
     if (remove_undetected_keypoints) {
       confidence_cols <- grep("^c", names(group_data), value = TRUE)
-      undetected_keypoints <- confidence_cols[sapply(confidence_cols, function(col) all(group_data[[col]] == 0))]
+      undetected_cols <- confidence_cols[sapply(confidence_cols, function(col) all(group_data[[col]] == 0))]
 
-      if (length(undetected_keypoints) > 0) {
+      if (length(undetected_cols) > 0) {
+        related_cols <- get_related_columns(undetected_cols)
         if (apply_removal_equally) {
-          columns_to_remove <- unique(c(columns_to_remove, undetected_keypoints,
-                                        gsub("^c", "x", undetected_keypoints),
-                                        gsub("^c", "y", undetected_keypoints)))
+          columns_to_remove <- unique(c(columns_to_remove, related_cols))
         } else {
-          group_columns_to_remove <- unique(c(group_columns_to_remove, undetected_keypoints,
-                                              gsub("^c", "x", undetected_keypoints),
-                                              gsub("^c", "y", undetected_keypoints)))
+          group_columns_to_remove <- unique(c(group_columns_to_remove, related_cols))
         }
       }
     }
 
-    # 3. Remove columns based on total confidence threshold
+    # 3. Remove keypoints based on total confidence threshold
     if (!is.null(remove_keypoints_total_confidence)) {
       confidence_cols <- grep("^c", names(group_data), value = TRUE)
+      below_threshold <- confidence_cols[sapply(confidence_cols, function(col) {
+        mean(group_data[[col]], na.rm = TRUE) < remove_keypoints_total_confidence
+      })]
 
-      cols_to_remove <- sapply(confidence_cols, function(col) {
-        mean_conf <- mean(group_data[[col]], na.rm = TRUE)
-        return(mean_conf < remove_keypoints_total_confidence)
-      })
-
-      confidence_to_remove <- confidence_cols[cols_to_remove]
-      if (length(confidence_to_remove) > 0) {
+      if (length(below_threshold) > 0) {
+        related_cols <- get_related_columns(below_threshold)
         if (apply_removal_equally) {
-          columns_to_remove <- unique(c(columns_to_remove, confidence_to_remove,
-                                        gsub("^c", "x", confidence_to_remove),
-                                        gsub("^c", "y", confidence_to_remove)))
+          columns_to_remove <- unique(c(columns_to_remove, related_cols))
         } else {
-          group_columns_to_remove <- unique(c(group_columns_to_remove, confidence_to_remove,
-                                              gsub("^c", "x", confidence_to_remove),
-                                              gsub("^c", "y", confidence_to_remove)))
+          group_columns_to_remove <- unique(c(group_columns_to_remove, related_cols))
         }
       }
     }
 
-    # 4. Remove columns based on missing data percentage threshold (renamed to remove_keypoints_missing_data)
-    if (!is.null(remove_keypoints_missing_data) && is.numeric(remove_keypoints_missing_data)) {
-      zero_percentages <- sapply(group_data, function(x) if (is.numeric(x)) mean(x == 0, na.rm = TRUE) else NA)
-      columns_to_check <- names(zero_percentages)[grepl("^[xyz]|^c", names(zero_percentages))]
-      missing_data_cols <- columns_to_check[zero_percentages[columns_to_check] > remove_keypoints_missing_data]
+    # 4. Remove keypoints based on missing data threshold
+    if (!is.null(remove_keypoints_missing_data)) {
+      numeric_cols <- grep("^[xyz]|^c", names(group_data), value = TRUE)
+      missing_data_cols <- numeric_cols[sapply(numeric_cols, function(col) {
+        mean(group_data[[col]] == 0, na.rm = TRUE) > remove_keypoints_missing_data
+      })]
 
-      if (apply_removal_equally) {
-        columns_to_remove <- unique(c(columns_to_remove, missing_data_cols))
-      } else {
-        group_columns_to_remove <- unique(c(group_columns_to_remove, missing_data_cols))
+      if (length(missing_data_cols) > 0) {
+        if (apply_removal_equally) {
+          columns_to_remove <- unique(c(columns_to_remove, missing_data_cols))
+        } else {
+          group_columns_to_remove <- unique(c(group_columns_to_remove, missing_data_cols))
+        }
       }
     }
 
-    # If not applying removals equally, remove columns for the current group
+    # Apply group-specific removals
     if (!apply_removal_equally && length(group_columns_to_remove) > 0) {
-      group_data <- group_data[, !names(group_data) %in% group_columns_to_remove]
-      df[df$person == person_value & df$region == region_value, ] <- group_data
+      df[df$person == person_value & df$region == region_value, ] <- group_data[, !names(group_data) %in% group_columns_to_remove]
       message(paste(length(group_columns_to_remove), "columns removed for person", person_value, "region", region_value))
     }
   }
 
-  # If applying removals equally, apply the column removals across the entire dataframe
+  # Apply global removals
   if (apply_removal_equally && length(columns_to_remove) > 0) {
     df <- df[, !names(df) %in% columns_to_remove]
     message(paste(length(columns_to_remove), "columns removed equally across all persons and regions:", paste(columns_to_remove, collapse = ", ")))

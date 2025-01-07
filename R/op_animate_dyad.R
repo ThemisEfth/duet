@@ -13,13 +13,23 @@
 #' @param hide_labels A logical value indicating whether to hide the x and y axes, box, and title. Default is FALSE.
 #' @param left_color A character string specifying the color to use for the left person. Default is "blue".
 #' @param right_color A character string specifying the color to use for the right person. Default is "red".
+#' @param background_color A character string specifying the background color of the plot. Default is "white". (US English)
+#' @param background_colour A character string specifying the background colour of the plot. Default is "white". (UK English)
 #'
 #' @return None. The function generates a video file as output.
 #' @importFrom grDevices dev.copy dev.off png
 #' @importFrom graphics points
 #' @importFrom utils txtProgressBar setTxtProgressBar
 #' @export
-op_animate_dyad <- function(data, output_file, lines = FALSE, keylabels = FALSE, label_type = "names", fps = 24, min_frame = NULL, max_frame = NULL, hide_labels = FALSE, left_color = "blue", right_color = "red") {
+op_animate_dyad <- function(data, output_file, lines = FALSE, keylabels = FALSE, label_type = "names", fps = 24,
+                            min_frame = NULL, max_frame = NULL, hide_labels = FALSE,
+                            left_color = "blue", right_color = "red",
+                            background_color = "white", background_colour = NULL) {
+
+  # Resolve background color preference
+  if (!is.null(background_colour)) {
+    background_color <- background_colour # Use UK spelling if provided
+  }
 
   # Ensure the output file path is correct
   output_file <- normalizePath(output_file, mustWork = FALSE)
@@ -73,7 +83,7 @@ op_animate_dyad <- function(data, output_file, lines = FALSE, keylabels = FALSE,
 
     # Plot for this frame with the new hide_labels and color parameters
     op_plot_openpose(
-      data_filtered,
+      data = data_filtered,
       frame_num = frame_num,
       person = "both",
       lines = lines,
@@ -81,7 +91,8 @@ op_animate_dyad <- function(data, output_file, lines = FALSE, keylabels = FALSE,
       label_type = label_type,
       hide_labels = hide_labels,
       left_color = left_color,
-      right_color = right_color
+      right_color = right_color,
+      background_color = background_color # Resolved parameter used here
     )
 
     # Save the plot as an image

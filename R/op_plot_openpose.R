@@ -34,7 +34,8 @@
 #'
 #' # Plot the data for the specified frame
 #' op_plot_openpose(data = data, frame_num = 10, person = "both", lines = TRUE, keylabels = TRUE,
-#'                  label_type = "names", left_color = "green", right_color = "purple")
+#'                  label_type = "names", left_color = "green", right_color = "purple",
+#'                  background_color = "grey90")
 #'
 #' @export
 op_plot_openpose <- function(data, frame_num, person = c("both", "left", "right"),
@@ -52,7 +53,7 @@ op_plot_openpose <- function(data, frame_num, person = c("both", "left", "right"
             label_type %in% c("names", "numbers"),
             is.logical(hide_labels) && length(hide_labels) == 1)
 
-  # Set the background color
+  # Set the background color of the plotting window
   par(bg = background_color)
 
   # Filter the dataframe for the specified frame

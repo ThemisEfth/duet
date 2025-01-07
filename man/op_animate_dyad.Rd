@@ -15,7 +15,9 @@ op_animate_dyad(
   max_frame = NULL,
   hide_labels = FALSE,
   left_color = "blue",
-  right_color = "red"
+  right_color = "red",
+  background_color = "white",
+  background_colour = NULL
 )
 }
 \arguments{
@@ -40,6 +42,10 @@ op_animate_dyad(
 \item{left_color}{A character string specifying the color to use for the left person. Default is "blue".}
 
 \item{right_color}{A character string specifying the color to use for the right person. Default is "red".}
+
+\item{background_color}{A character string specifying the background color of the plot. Default is "white". (US English)}
+
+\item{background_colour}{A character string specifying the background colour of the plot. Default is "white". (UK English)}
 }
 \value{
 None. The function generates a video file as output.

@@ -34,6 +34,13 @@ op_compute_acceleration <- function(data, fps = NULL, video_duration = NULL, ove
   x_columns <- grep("^x", colnames(data), value = TRUE)
   y_columns <- grep("^y", colnames(data), value = TRUE)
 
+  # Check for missing x or y columns when merge_xy is TRUE
+  if (merge_xy) {
+    if (length(x_columns) == 0 || length(y_columns) == 0) {
+      stop("Error in merge_xy calculations: Both x and y columns are required for merging.")
+    }
+  }
+
   if (merge_xy) {
     # Ensure matching x and y columns based on suffix
     x_suffixes <- sub("^x", "", x_columns)
