@@ -68,9 +68,13 @@ op_compute_velocity <- function(data, fps = NULL, video_duration = NULL, overwri
     data <- data[ , !(names(data) %in% c(x_columns, y_columns))]
   }
 
-  # Remove columns starting with 'c'
+  # Check if columns starting with 'c' exist
   c_columns <- grep("^c", colnames(data), value = TRUE)
-  data <- data[ , !(names(data) %in% c_columns)]
+
+  if (length(c_columns) > 0) {
+    # Remove columns starting with 'c'
+    data <- data[, !(names(data) %in% c_columns)]
+  }
 
   return(data)
 }

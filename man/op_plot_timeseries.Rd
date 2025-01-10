@@ -24,14 +24,15 @@ op_plot_timeseries(
 
 \item{person}{Character string specifying which person to plot ("left", "right", or "both", default is "both").}
 
-\item{max_facets}{Integer indicating the maximum number of facets allowed (default is 10).}
+\item{max_facets}{Integer indicating the maximum number of facets allowed (default is 10). If the total facets exceed this number, the function returns \code{NULL} with a warning.}
 }
 \value{
-A ggplot object.
+A ggplot object or NULL if the maximum number of facets is exceeded.
 }
 \description{
 This function plots the specified keypoints over time with facet wrapping.
 It allows the user to overlay axes or separate them, and to filter the data by person.
+If the number of facets exceeds the \code{max_facets} limit, a warning is issued, and the function will not return a plot.
 }
 \examples{
 # Example data frame

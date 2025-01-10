@@ -68,7 +68,7 @@ op_animate_dyad <- function(data, output_file, lines = FALSE, keylabels = FALSE,
   # Create a temporary directory for saving frames
   temp_dir <- tempdir()
 
-  # List to store the paths of the saved images
+  # List to store the paths of the saved imagesx
   frame_files <- c()
 
   # Progress bar
@@ -92,7 +92,7 @@ op_animate_dyad <- function(data, output_file, lines = FALSE, keylabels = FALSE,
       hide_labels = hide_labels,
       left_color = left_color,
       right_color = right_color,
-      background_color = background_color # Resolved parameter used here
+      background_color = background_color
     )
 
     # Save the plot as an image

@@ -24,6 +24,12 @@ op_batch_create_csv(
 
 \item{include_labels}{Logical. Whether to include labels in the CSV. Default is FALSE.}
 
+\item{frame_width}{Numeric. The width of the video frame in pixels. Default is 1920.}
+
+\item{export_type}{Character. The type of export file, such as 'dyad' or other formats. Default is 'dyad'.}
+
+\item{model}{Character. The model object to use for processing, e.g., 'all' or a specific model. Default is 'all'.}
+
 \item{overwrite}{Logical. Whether to overwrite existing files. Default is FALSE.}
 }
 \value{

@@ -8,6 +8,9 @@
 #' @param output_base_path Character. The base path where the CSV files will be saved.
 #' @param include_filename Logical. Whether to include filenames in the CSV. Default is TRUE.
 #' @param include_labels Logical. Whether to include labels in the CSV. Default is FALSE.
+#' @param frame_width Numeric. The width of the video frame in pixels. Default is 1920.
+#' @param export_type Character. The type of export file, such as 'dyad' or other formats. Default is 'dyad'.
+#' @param model Character. The model object to use for processing, e.g., 'all' or a specific model. Default is 'all'.
 #' @param overwrite Logical. Whether to overwrite existing files. Default is FALSE.
 #'
 #' @return None. The function is called for its side effects.

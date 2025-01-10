@@ -6,56 +6,36 @@
 \usage{
 op_remove_keypoints(
   df,
-  remove_undetected_keypoints = FALSE,
   remove_specific_keypoints = NULL,
+  remove_undetected_keypoints = FALSE,
   remove_keypoints_total_confidence = NULL,
   remove_keypoints_missing_data = NULL,
   apply_removal_equally = TRUE
 )
 }
 \arguments{
-\item{df}{A dataframe containing the confidence data (e.g., confidence columns prefixed with 'c', and corresponding x/y columns).}
+\item{df}{A data frame containing the data to process. Keypoint columns are expected to include
+x, y, and c (confidence) columns with corresponding indices.}
 
-\item{remove_undetected_keypoints}{Logical. TRUE to remove keypoints that have all zero confidence values, FALSE to keep them. Default is FALSE.}
+\item{remove_specific_keypoints}{Character vector. Specifies the keypoint indices (e.g., "1") to remove.
+This will automatically remove corresponding \code{x}, \code{y}, and \code{c} columns for those indices. Default is NULL.}
 
-\item{remove_specific_keypoints}{Character vector. A list of specific columns to be removed. Default is NULL.}
+\item{remove_undetected_keypoints}{Logical. If TRUE, removes keypoints where all confidence values are zero across all rows. Default is FALSE.}
 
-\item{remove_keypoints_total_confidence}{Numeric. A threshold for the mean of confidence values across all rows.
-Columns where the mean of confidence is below this threshold will be removed along with their corresponding x/y columns. Default is NULL.}
+\item{remove_keypoints_total_confidence}{Numeric or FALSE. A threshold for the mean confidence values.
+Keypoints with a mean confidence below this threshold will be removed. If set to FALSE, behaves as NULL. Default is NULL.}
 
-\item{remove_keypoints_missing_data}{Numeric. A threshold (between 0 and 1) for the percentage of zeros or missing data in each numeric column.
-Columns with missing data percentages exceeding this threshold will be removed. Default is NULL.}
+\item{remove_keypoints_missing_data}{Numeric or FALSE. A threshold (between 0 and 1) for the percentage
+of missing or zero values. Columns exceeding this threshold will be removed. If set to FALSE, behaves as NULL. Default is NULL.}
 
-\item{apply_removal_equally}{Logical. If TRUE, the columns to remove will be applied equally across all persons and regions.
-If FALSE, removals will be applied separately for each person and region. Default is TRUE.}
+\item{apply_removal_equally}{Logical. If TRUE, the same columns will be removed across all rows of the dataset.
+If FALSE, removal criteria are applied separately for each combination of \code{person} and \code{region}. Default is TRUE.}
 }
 \value{
-The dataframe with keypoints and columns optionally removed based on the criteria specified.
+A data frame with specified keypoints and corresponding columns removed.
 }
 \description{
-This function removes keypoints and corresponding columns based on several criteria: user-specified keypoints,
-low total confidence values over time, exceeding a threshold of missing/zero values, or if all data for a keypoint is missing (i.e., all zeros).
-The user can choose to apply the removal equally across all persons or separately for each person.
-}
-\examples{
-# Example dataframe
-df <- data.frame(
-  person = c(1, 1, 2, 2),
-  region = c("face", "face", "face", "face"),
-  c1 = c(0.9, 0.8, 0.7, 0.0),
-  c2 = c(0.4, 0.3, 0.2, 0.0),
-  x1 = c(1, 2, 3, 4),
-  x2 = c(4, 5, 6, 7),
-  y1 = c(7, 8, 9, 10),
-  y2 = c(10, 11, 12, 13)
-)
-
-# Example usage:
-df_filtered <- op_remove_keypoints(df,
-                                   remove_undetected_keypoints = TRUE,
-                                   remove_specific_keypoints = c("c2"),
-                                   remove_keypoints_total_confidence = 0.8,
-                                   remove_keypoints_missing_data = 0.5,
-                                   apply_removal_equally = TRUE)
-print(df_filtered)
+This function removes keypoints and their corresponding columns based on several criteria:
+user-specified keypoints, low total confidence values over time, exceeding a threshold of
+missing/zero values, or if all data for a keypoint is missing (i.e., all zeros).
 }

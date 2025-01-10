@@ -27,14 +27,15 @@ Imports:
     patchwork,
     reshape2,
     rjson,
+    rlang,
     signal,
     stats,
     stringr,
     tidyr,
+    tidyselect,
     tools,
     utils,
-    zoo,
-    tidyselect
+    zoo
 Suggests: 
     spelling,
     testthat (>= 3.0.0)

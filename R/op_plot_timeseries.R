@@ -18,7 +18,8 @@
 #' @importFrom ggplot2 ggplot aes geom_line facet_wrap theme_classic theme labs
 #' @importFrom ggthemes scale_color_colorblind
 #' @importFrom stats as.formula
-#' @importFrom rlang sym
+#' @importFrom rlang sym .data
+#' @importFrom tidyselect all_of
 #'
 #' @examples
 #' # Example data frame
@@ -100,7 +101,7 @@ op_plot_timeseries <- function(data, keypoints = NULL, free_y = TRUE, overlay_ax
   }
 
   # Plot the data
-  p <- ggplot(df_long, aes(x = .data[[x_axis]], y = values, color = if (overlay_axes) axis else keypoint)) +
+  p <- ggplot(df_long, aes(x = .data[[x_axis]], y = values, color = if (overlay_axes) .data[["axis"]] else keypoint)) +
     geom_line() +
     facet_wrap(as.formula(paste("~", facets)), scales = ifelse(free_y, "free_y", "fixed")) +
     theme_classic(base_size = 15)
