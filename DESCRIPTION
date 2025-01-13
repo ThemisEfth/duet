@@ -5,16 +5,14 @@ Version: 0.1.0
 Authors@R: 
     person("Themis", "Efthimiou", , "themiftw20@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-8458-5493"))
-Description: This R package facilitates researchers in analysing
-    non-verbal communication by processing data extracted from video
-    recordings of dyadic interactions. It supports integration with open
-    source tools. Currently, limited to OpenPose converting its outputs
-    into CSV format for further analysis. The package includes functions
-    for data pre-processing, visualization, and computation of key motion
-    indices such as velocity, acceleration, and jerkiness. By streamlining
-    these tasks, the package enables efficient and effective analysis of
-    non-verbal cues in paired interactions, aiding in a deeper
-    understanding of human communication dynamics.
+Description: Tools for analysing non-verbal communication by processing 
+    data extracted from video recordings of dyadic interactions. It supports 
+    integration with open source tools, currently limited to OpenPose, 
+    converting its outputs into CSV format for further analysis. The package 
+    includes functions for data pre-processing, visualization, and computation 
+    of motion indices such as velocity, acceleration, and jerkiness. These 
+    tools facilitate the analysis of non-verbal cues in paired interactions, 
+    contributing to research on human communication dynamics. 
 License: MIT + file LICENSE
 Imports: 
     dplyr,
