@@ -7,12 +7,14 @@ Authors@R:
            comment = c(ORCID = "0000-0002-8458-5493"))
 Description: Tools for analysing non-verbal communication by processing 
     data extracted from video recordings of dyadic interactions. It supports 
-    integration with open source tools, currently limited to OpenPose, 
-    converting its outputs into CSV format for further analysis. The package 
-    includes functions for data pre-processing, visualization, and computation 
-    of motion indices such as velocity, acceleration, and jerkiness. These 
-    tools facilitate the analysis of non-verbal cues in paired interactions, 
-    contributing to research on human communication dynamics. 
+    integration with open source tools, currently limited to 'OpenPose' 
+    (Cao et al., 2019 <doi:10.1109/TPAMI.2019.2929257>), converting its 
+    outputs into CSV format for further analysis. The package includes 
+    functions for data pre-processing, visualization, and computation of 
+    motion indices such as velocity, acceleration, and jerkiness 
+    (Cook et al., 2013 <doi:10.1093/brain/awt208>). These tools facilitate 
+    the analysis of non-verbal cues in paired interactions, contributing 
+    to research on human communication dynamics.
 License: MIT + file LICENSE
 Imports: 
     dplyr,
