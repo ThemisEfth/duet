@@ -1,7 +1,7 @@
 Package: duet
 Title: Analysing Non-Verbal Communication in Dyadic Interactions from
     Video Data
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: 
     person("Themis", "Efthimiou", , "themiftw20@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-8458-5493"))
