@@ -12,7 +12,20 @@
 #'
 #' @return A data frame with acceleration columns added and 'c' columns removed.
 #' @export
+#' @examples
+#' # Load example data from the package
+#' data_path <- system.file("extdata/csv_data/A-B_body_dyad_velocity.csv", package = "duet")
+#' data <- read.csv(data_path)
 #'
+#' # Compute acceleration
+#' result <- op_compute_acceleration(
+#'   data = data,
+#'   fps = 30,
+#'   overwrite = FALSE,
+#'   merge_xy = TRUE
+#' )
+#'
+#' print(result)
 op_compute_acceleration <- function(data, fps = NULL, video_duration = NULL, overwrite = FALSE, merge_xy = FALSE) {
 
   # Determine fps if only video_duration is provided

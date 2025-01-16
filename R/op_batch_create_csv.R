@@ -1,7 +1,7 @@
 #' Process all Dyad Directories to Create CSV Files Using MultimodalR
 #'
 #' This function processes all dyad directories in the specified input base path,
-#' applying the `op_create_csv` function from the MultimodalR package, and saves
+#' applying the `op_create_csv` function from the package, and saves
 #' the output in the corresponding directories in the output base path.
 #'
 #' @param input_base_path Character. The base path containing dyad directories with JSON files.
@@ -15,13 +15,6 @@
 #'
 #' @return None. The function is called for its side effects.
 #' @export
-#' @examples
-#' \dontrun{
-#' input_base_path <- "/path/to/OpenPose_out"
-#' output_base_path <- "/path/to/OpenPose_CSV"
-#' op_batch_create_csv(input_base_path, output_base_path)
-#' }
-
 op_batch_create_csv <- function(input_base_path, output_base_path, include_filename = TRUE, include_labels = FALSE, frame_width = 1920, export_type = 'dyad', model = 'all', overwrite = FALSE) {
 
   # List all dyad directories in the input path

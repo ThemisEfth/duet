@@ -42,3 +42,21 @@ for the selected columns (keypoints), including moving average, Kalman-Ziegler A
 Savitzky-Golay filter, and Butterworth filter. It can optionally plot the
 smoothed data alongside the original data, with faceting based on the \code{person} and \code{keypoint} columns.
 }
+\examples{
+# Load example data from the package
+data_path <- system.file("extdata/csv_data/dyad_1/A_body.csv", package = "duet")
+data <- read.csv(data_path)
+
+# Smooth the time series data using the Savitzky-Golay filter
+smoothed_data <- op_smooth_timeseries(
+  data = data,
+  method = "savitzky",
+  sg_window = 5,
+  sg_order = 3,
+  plot = TRUE,
+  keypoints = c("x0", "y0") # Specify keypoints to smooth
+)
+
+# Print the smoothed data
+print(smoothed_data)
+}

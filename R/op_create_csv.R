@@ -9,24 +9,33 @@
 #' @param include_filename Boolean indicating whether to include the base filename in column names. Defaults to FALSE.
 #' @param include_labels Boolean indicating whether to rename columns based on region labels. Defaults to FALSE.
 #' @param frame_width Width of the frame. Defaults to 1920.
-#' @param export_type Type of export: "individual" to export separate CSV files for each person, "dyad" to export both persons' data into a single CSV file. Defaults to "individual".
+#' @param export_type Type of export: "individual" to export separate CSV files for each person,
+#'   "dyad" to export both persons' data into a single CSV file. Defaults to "individual".
+#'
+#' @return No return value. This function is called for its side effects, which include writing
+#' CSV files to the specified output directory.
+#'
 #' @export
 #' @importFrom rjson fromJSON
 #' @importFrom utils write.csv
 #' @importFrom stats setNames
 #' @importFrom tools file_path_sans_ext
 #' @importFrom parallel detectCores
-#' @examples
-#' \dontrun{
-#' # Assume you have a directory with JSON files
-#' input_path <- "path/to/json/files"
-#' output_path <- "path/to/save/csv/files"
 #'
-#' # Create CSV files using the function
+#' @examples
+#' \donttest{
+#' # Path to example JSON files included with the package
+#' input_path <- system.file("extdata/json_files", package = "duet")
+#'
+#' # Temporary output directory
+#' output_path <- tempfile("output_csv")
+#' dir.create(output_path)
+#'
+#' # Run the function using the provided data
 #' op_create_csv(
 #'   input_path = input_path,
 #'   output_path = output_path,
-#'   model = "all",
+#'   model = "body",
 #'   include_filename = TRUE,
 #'   include_labels = TRUE,
 #'   frame_width = 1920,

@@ -48,8 +48,31 @@ op_animate_dyad(
 \item{background_colour}{A character string specifying the background colour of the plot. Default is "white". (UK English)}
 }
 \value{
-None. The function generates a video file as output.
+No return value. This function generates a video file as a side effect, saved at the specified output path.
 }
 \description{
 This function generates a video of the OpenPose data for both persons in a dyad across a specified range of frames.
+}
+\examples{
+\dontrun{
+# Example OpenPose data
+data <- data.frame(
+  frame = rep(1:10, each = 2),
+  person = rep(c("left", "right"), times = 10),
+  x0 = runif(20, 0, 1920), y0 = runif(20, 0, 1080),
+  x1 = runif(20, 0, 1920), y1 = runif(20, 0, 1080)
+)
+
+# Output file path
+output_file <- tempfile("output_video", fileext = ".mp4")
+
+# Generate video
+op_animate_dyad(
+  data = data,
+  output_file = output_file,
+  fps = 24,
+  left_color = "blue",
+  right_color = "red"
+)
+}
 }

@@ -39,3 +39,21 @@ This function removes keypoints and their corresponding columns based on several
 user-specified keypoints, low total confidence values over time, exceeding a threshold of
 missing/zero values, or if all data for a keypoint is missing (i.e., all zeros).
 }
+\examples{
+# Load example data from the package
+data_path <- system.file("extdata/csv_data/dyad_1/A_body.csv", package = "duet")
+df <- read.csv(data_path)
+
+# Remove keypoints based on various criteria
+result <- op_remove_keypoints(
+  df = df,
+  remove_specific_keypoints = c("1", "2"), # Remove specific keypoints (e.g., keypoints 1 and 2)
+  remove_undetected_keypoints = TRUE,      # Remove keypoints with all zero confidence
+  remove_keypoints_total_confidence = 0.5, # Remove keypoints with mean confidence below 0.5
+  remove_keypoints_missing_data = 0.2,     # Remove keypoints with >20\% missing data
+  apply_removal_equally = TRUE             # Apply removal equally across the dataset
+)
+
+# Display the result
+print(result)
+}

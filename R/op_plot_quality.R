@@ -17,7 +17,12 @@
 #' @export
 #' @examples
 #' # Example usage:
-#' # df <- read.csv("path_to_your_data.csv")
+#' # Path to example CSV file included with the package
+#' file_path <- system.file("extdata/csv_data/A-B_body_dyad.csv", package = "duet")
+#'
+#' # Load the data
+#' data <- read.csv(file_path)
+#'
 #' # plot <- op_plot_data_quality(df, plot_type = "both", threshold_line = 75)
 #' # print(plot)
 op_plot_quality <- function(df, plot_type = "confidence", threshold_line = 50) {

@@ -12,7 +12,20 @@
 #'
 #' @return A data frame with jerk columns added and 'c' columns removed.
 #' @export
+#' @examples
+#' # Load example data from the package
+#' data_path <- system.file("extdata/csv_data/A-B_body_dyad_accel.csv", package = "duet")
+#' data <- read.csv(data_path)
 #'
+#' # Compute jerk
+#' result <- op_compute_jerk(
+#'   data = data,
+#'   fps = 30,
+#'   overwrite = FALSE,
+#'   merge_xy = TRUE
+#' )
+#'
+#' print(result)
 op_compute_jerk <- function(data, fps = NULL, video_duration = NULL, overwrite = FALSE, merge_xy = FALSE) {
 
   # Determine fps if only video_duration is provided

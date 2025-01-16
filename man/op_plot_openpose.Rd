@@ -15,6 +15,7 @@ op_plot_openpose(
   left_color = "blue",
   right_color = "red",
   background_color = "white",
+  background_colour = NULL,
   line_width = 2,
   point_size = 1.5,
   text_color = "black"
@@ -42,31 +43,40 @@ person identifier, and x/y coordinates for each keypoint.}
 
 \item{background_color}{A character string specifying the background color of the plot. Default is "white".}
 
+\item{background_colour}{A character string specifying the background colour of the plot (UK spelling). Default is NULL.}
+
 \item{line_width}{A numeric value specifying the width of the lines between keypoints. Default is 2.}
 
 \item{point_size}{A numeric value specifying the size of the keypoint markers. Default is 1.5.}
 
 \item{text_color}{A character string specifying the color of the text (labels and titles). Default is "black".}
 }
+\value{
+No return value, called for side effects (plotting to screen).
+}
 \description{
 This function visualizes keypoints and their connections from OpenPose data for a specified frame.
 The function allows customization of the plot, including the option to display labels, lines between keypoints,
-and different colors for left and right persons.
+and different colours for left and right persons.
 }
 \examples{
-# Create a mock data frame with OpenPose data for demonstration
-data <- data.frame(
-  frame = rep(10, 4),
-  person = rep(c("left", "right"), each = 2),
-  x0 = c(100, 200, 300, 400),
-  y0 = c(150, 250, 350, 450),
-  x1 = c(110, 210, 310, 410),
-  y1 = c(160, 260, 360, 460)
-)
+# Path to example CSV file included with the package
+file_path <- system.file("extdata/csv_data/A-B_body_dyad.csv", package = "duet")
+
+# Load the data
+data <- read.csv(file_path)
 
 # Plot the data for the specified frame
-op_plot_openpose(data = data, frame_num = 10, person = "both", lines = TRUE, keylabels = TRUE,
-                 label_type = "names", left_color = "green", right_color = "purple",
-                 background_color = "grey90")
+op_plot_openpose(
+  data = data,
+  frame_num = 1,
+  person = "both",
+  lines = TRUE,
+  keylabels = TRUE,
+  label_type = "names",
+  left_color = "blue",
+  right_color = "red",
+  background_colour = "grey90"
+)
 
 }

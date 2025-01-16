@@ -27,23 +27,31 @@ op_create_csv(
 
 \item{frame_width}{Width of the frame. Defaults to 1920.}
 
-\item{export_type}{Type of export: "individual" to export separate CSV files for each person, "dyad" to export both persons' data into a single CSV file. Defaults to "individual".}
+\item{export_type}{Type of export: "individual" to export separate CSV files for each person,
+"dyad" to export both persons' data into a single CSV file. Defaults to "individual".}
+}
+\value{
+No return value. This function is called for its side effects, which include writing
+CSV files to the specified output directory.
 }
 \description{
 This function reads JSON files from the specified directory, processes the pose keypoints,
 and saves the results into CSV files.
 }
 \examples{
-\dontrun{
-# Assume you have a directory with JSON files
-input_path <- "path/to/json/files"
-output_path <- "path/to/save/csv/files"
+\donttest{
+# Path to example JSON files included with the package
+input_path <- system.file("extdata/json_files", package = "duet")
 
-# Create CSV files using the function
+# Temporary output directory
+output_path <- tempfile("output_csv")
+dir.create(output_path)
+
+# Run the function using the provided data
 op_create_csv(
   input_path = input_path,
   output_path = output_path,
-  model = "all",
+  model = "body",
   include_filename = TRUE,
   include_labels = TRUE,
   frame_width = 1920,

@@ -22,21 +22,15 @@
 #' @importFrom tidyselect all_of
 #'
 #' @examples
-#' # Example data frame
-#' df <- data.frame(
-#'   frame = 1:100,
-#'   x0 = rnorm(100),
-#'   y0 = rnorm(100),
-#'   x1 = rnorm(100),
-#'   y1 = rnorm(100),
-#'   person = rep(c("left", "right"), each = 50)
-#' )
+#' # Load example data from the package
+#' data_path <- system.file("extdata/csv_data/dyad_1/A_body.csv", package = "duet")
+#' data <- read.csv(data_path)
 #'
 #' # Plot with overlay_axes = TRUE
-#' op_plot_timeseries(data = df, keypoints = c("0", "1"), overlay_axes = TRUE, person = "both")
+#' op_plot_timeseries(data = data, keypoints = c("0", "1"), overlay_axes = TRUE, person = "both")
 #'
 #' # Plot with overlay_axes = FALSE
-#' op_plot_timeseries(data = df, keypoints = c("0", "1"), overlay_axes = FALSE, person = "left")
+#' op_plot_timeseries(data = data, keypoints = c("0", "1"), overlay_axes = FALSE, person = "left")
 op_plot_timeseries <- function(data, keypoints = NULL, free_y = TRUE, overlay_axes = FALSE, person = "both", max_facets = 10) {
   x_axis <- "frame"
 

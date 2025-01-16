@@ -31,3 +31,18 @@ This function calculates the acceleration for each column that begins with 'x' a
 and removes all columns that start with 'c'. It takes either the fps or the video
 duration as input to compute the acceleration.
 }
+\examples{
+# Load example data from the package
+data_path <- system.file("extdata/csv_data/A-B_body_dyad_velocity.csv", package = "duet")
+data <- read.csv(data_path)
+
+# Compute acceleration
+result <- op_compute_acceleration(
+  data = data,
+  fps = 30,
+  overwrite = FALSE,
+  merge_xy = TRUE
+)
+
+print(result)
+}

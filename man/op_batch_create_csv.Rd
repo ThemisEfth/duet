@@ -37,13 +37,6 @@ None. The function is called for its side effects.
 }
 \description{
 This function processes all dyad directories in the specified input base path,
-applying the \code{op_create_csv} function from the MultimodalR package, and saves
+applying the \code{op_create_csv} function from the package, and saves
 the output in the corresponding directories in the output base path.
-}
-\examples{
-\dontrun{
-input_base_path <- "/path/to/OpenPose_out"
-output_base_path <- "/path/to/OpenPose_CSV"
-op_batch_create_csv(input_base_path, output_base_path)
-}
 }

@@ -30,6 +30,23 @@
 #' @importFrom reshape2 melt
 #' @importFrom ggplot2 ggplot aes geom_line facet_grid theme_classic labs
 #' @export
+#' @examples
+#' # Load example data from the package
+#' data_path <- system.file("extdata/csv_data/dyad_1/A_body.csv", package = "duet")
+#' data <- read.csv(data_path)
+#'
+#' # Smooth the time series data using the Savitzky-Golay filter
+#' smoothed_data <- op_smooth_timeseries(
+#'   data = data,
+#'   method = "savitzky",
+#'   sg_window = 5,
+#'   sg_order = 3,
+#'   plot = TRUE,
+#'   keypoints = c("x0", "y0") # Specify keypoints to smooth
+#' )
+#'
+#' # Print the smoothed data
+#' print(smoothed_data)
 # Declare global variables to avoid NOTE about undefined variables in ggplot2
 utils::globalVariables(c("value", "type", "keypoint"))
 

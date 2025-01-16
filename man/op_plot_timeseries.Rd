@@ -35,19 +35,13 @@ It allows the user to overlay axes or separate them, and to filter the data by p
 If the number of facets exceeds the \code{max_facets} limit, a warning is issued, and the function will not return a plot.
 }
 \examples{
-# Example data frame
-df <- data.frame(
-  frame = 1:100,
-  x0 = rnorm(100),
-  y0 = rnorm(100),
-  x1 = rnorm(100),
-  y1 = rnorm(100),
-  person = rep(c("left", "right"), each = 50)
-)
+# Load example data from the package
+data_path <- system.file("extdata/csv_data/dyad_1/A_body.csv", package = "duet")
+data <- read.csv(data_path)
 
 # Plot with overlay_axes = TRUE
-op_plot_timeseries(data = df, keypoints = c("0", "1"), overlay_axes = TRUE, person = "both")
+op_plot_timeseries(data = data, keypoints = c("0", "1"), overlay_axes = TRUE, person = "both")
 
 # Plot with overlay_axes = FALSE
-op_plot_timeseries(data = df, keypoints = c("0", "1"), overlay_axes = FALSE, person = "left")
+op_plot_timeseries(data = data, keypoints = c("0", "1"), overlay_axes = FALSE, person = "left")
 }

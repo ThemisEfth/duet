@@ -31,3 +31,18 @@ This function calculates the velocity for each column that begins with 'x' and '
 and removes all columns that start with 'c'. It takes either the fps or the video
 duration as input to compute the velocity.
 }
+\examples{
+# Load example data from the package
+data_path <- system.file("extdata/csv_data/A-B_body_dyad.csv", package = "duet")
+data <- read.csv(data_path)
+
+# Compute velocity
+result <- op_compute_velocity(
+  data = data,
+  fps = 30,
+  overwrite = FALSE,
+  merge_xy = TRUE
+)
+
+print(result)
+}

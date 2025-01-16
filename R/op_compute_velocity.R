@@ -12,7 +12,20 @@
 #'
 #' @return A data frame with velocity columns added and 'c' columns removed.
 #' @export
+#' @examples
+#' # Load example data from the package
+#' data_path <- system.file("extdata/csv_data/A-B_body_dyad.csv", package = "duet")
+#' data <- read.csv(data_path)
 #'
+#' # Compute velocity
+#' result <- op_compute_velocity(
+#'   data = data,
+#'   fps = 30,
+#'   overwrite = FALSE,
+#'   merge_xy = TRUE
+#' )
+#'
+#' print(result)
 op_compute_velocity <- function(data, fps = NULL, video_duration = NULL, overwrite = FALSE, merge_xy = FALSE) {
 
   # Determine fps if only video_duration is provided

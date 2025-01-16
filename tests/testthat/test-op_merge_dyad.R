@@ -1,6 +1,6 @@
 library(testthat)
 
-test_that("op_merge_each_dyad merges CSV files correctly", {
+test_that("op_merge_dyad merges CSV files correctly", {
   # Create a temporary input base path and output base path
   input_base_path <- file.path(tempdir(), "input_dyad")
   output_base_path <- file.path(tempdir(), "output_dyad")
@@ -28,7 +28,7 @@ test_that("op_merge_each_dyad merges CSV files correctly", {
   )
 
   # Run the merge function
-  op_merge_each_dyad(input_base_path, output_base_path)
+  op_merge_dyad(input_base_path, output_base_path)
 
   # Check that the output directory contains the merged file
   merged_file <- file.path(output_base_path, "dyad_1_merged.csv")

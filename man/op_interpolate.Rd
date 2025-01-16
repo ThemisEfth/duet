@@ -29,3 +29,18 @@ This function performs interpolation for x and y coordinate columns in a dataset
 based on confidence thresholds. It groups the data by \code{person} and \code{region} and
 uses spline interpolation to estimate missing or low-confidence values.
 }
+\examples{
+# Load example data from the package
+data_path <- system.file("extdata/csv_data/A-B_body_dyad.csv", package = "duet")
+data <- read.csv(data_path)
+
+# Interpolate missing or low-confidence values
+result <- op_interpolate(
+  data = data,
+  confidence_threshold = 0.5,
+  missing = TRUE,
+  treat_na_conf_as_low = TRUE
+)
+
+print(result)
+}
