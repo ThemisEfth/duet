@@ -35,26 +35,6 @@ library(cowplot)
 library(rempsyc)
 ```
 
-# Generate data for a single dyad
-
-```{r eval=FALSE, include=FALSE}
-op_create_csv(
-  input_path = './json/Dyad_1',
-  output_path = './Dyad',
-  model = 'body'
-)
-```
-
-# Batch generate data for all dyads
-
-```{r eval=FALSE, include=FALSE}
-op_batch_create_csv(
-  input_base_path = './json',
-  output_base_path = './dyad',
-  model = 'body'
-)
-```
-
 # Import data
 
 ```{r}
