@@ -1,0 +1,165 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Install Duet
+
+```{r eval=FALSE, include=FALSE}
+install.packages('duet')
+```
+
+# Optional Install other packages 
+
+```{r eval=FALSE, include=FALSE}
+# Check and optionally load required packages
+required_packages <- c("tidyverse", "magick", "ggplot2", "cowplot", "rempsyc")
+
+invisible(lapply(required_packages, function(pkg) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    message(paste("Package", pkg, "is not installed. Install it using install.packages('", pkg, "')", sep = ""))
+  } else {
+    library(pkg, character.only = TRUE)
+  }
+}))
+```
+
+# Load packages
+
+```{r}
+library(tidyverse)
+library(duet)
+library(magick)
+library(ggplot2)
+library(cowplot)
+library(rempsyc)
+```
+
+# Generate data for a single dyad
+
+```{r eval=FALSE, include=FALSE}
+op_create_csv(
+  input_path = './json/Dyad_1',
+  output_path = './Dyad',
+  model = 'body'
+)
+```
+
+# Batch generate data for all dyads
+
+```{r eval=FALSE, include=FALSE}
+op_batch_create_csv(
+  input_base_path = './json',
+  output_base_path = './dyad',
+  model = 'body'
+)
+```
+
+# Import data
+
+```{r}
+df <- read.csv('./dyad_16.csv')
+```
+
+# Check Data
+
+```{r}
+df |> op_plot_openpose(frame_num = 2, person = "both", lines = TRUE)
+```
+
+# Apply labels and plot the data quality
+
+```{r}
+df |> 
+  op_apply_keypoint_labels() |> 
+  op_plot_quality(plot_type = 'completeness', 
+                  threshold_line = 80) -> pl_completeness
+
+pl_completeness
+
+df |> 
+  op_plot_quality(plot_type = 'confidence', 
+                  threshold_line = 80) -> pl_conf
+
+pl_conf
+
+plot_grid(pl_completeness, pl_conf, ncol = 1, labels = 'auto') -> pl_qual_both
+
+df |> 
+  op_apply_keypoint_labels() |> 
+  op_plot_quality(plot_type = 'both', 
+                  threshold_line = 80) -> pl_qual
+
+pl_qual
+
+ggsave('../figures/Fig2_Quality.tiff', 
+       pl_qual_both, 
+       width = 6, 
+       height = 5,
+       dpi = 300)
+```
+
+# Plot timeseries data
+
+```{r}
+df |> 
+  op_plot_timeseries(keypoints = c('1', '2', '3'),
+                     free_y = TRUE,
+                     overlay = TRUE,
+                     person = 'both',
+                     max_facets = 20) -> pl_ts
+
+pl_ts
+
+ggsave('./Fig3_Timeseries.tiff', 
+       pl_ts, 
+       width = 6, 
+       height = 5,
+       dpi = 300)
+```
+
+# Apply moving-average smoothing
+
+```{r}
+df |> 
+  op_smooth_timeseries(keypoints = c('x1'),
+                       method = 'rollmean',
+                       rollmean_width = 100,
+                       plot = TRUE,
+                       side = 'right')
+```
+
+# Compute velocity
+
+```{r}
+df |> 
+  op_compute_velocity(merge_xy = TRUE,
+                      overwrite = TRUE,
+                      fps = 30) -> df_velocity
+
+df_velocity |> 
+  filter(frame != 1) |> 
+    filter(frame < 6) |> 
+  select(person, frame, region, v_1, v_2, v_3, v_4) |>
+  nice_table() -> tbl
+
+flextable::save_as_docx(tbl, path = "./velocity.docx")
+```
+
+# Compute acceleration
+
+```{r}
+df_velocity |> 
+  op_compute_acceleration(merge_xy = TRUE,
+                          overwrite = TRUE,
+                          fps = 30) -> df_acceleration
+```
+
+# Compute jerkiness
+
+```{r}
+df_acceleration |> 
+  op_compute_acceleration(merge_xy = TRUE,
+                          overwrite = TRUE,
+                          fps = 30) -> df_jerkiness
+```
