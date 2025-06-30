@@ -53,7 +53,6 @@ if(length(new_packages)) install.packages(new_packages)
 
 ```{r load-libraries}
 library(tidyverse)
-library(duet)
 library(magick)
 library(ggplot2)
 library(cowplot)
@@ -62,6 +61,15 @@ library(flextable)
 
 # Set a consistent theme for ggplot2 plots
 theme_set(theme_classic(base_size = 12))
+```
+
+```{r}
+# Install the duet package from GitHub if not already installed
+if (!"duet" %in% installed.packages()[,"Package"]) {
+  remotes::install_github("ThemisEfth/duet", upgrade = "never")
+}
+
+library(duet)
 ```
 
 ### Create Directory Structure
@@ -99,12 +107,14 @@ Place your raw OpenPose JSON files in a dedicated folder. For this example, we a
 This function reads all JSON files in the specified directory and converts them into one CSV file. We set `export_type = 'person'` and specify `person = 1` to ensure we only process data for the first person detected by OpenPose.
 
 ```{r convert-single-dyad}
+tictoc::tic
 op_create_csv(
   input_path = './openpose_json/Dyad_10',
   output_path = './openpose_csv/Dyad_10',
   model = 'body',
   include_filename = TRUE,
   export_type = 'dyad')
+tictoc::toc
 ```
 
 ---
@@ -117,7 +127,7 @@ Load the CSV file you just created.
 
 ```{r import-data}
 # Read the CSV file into a dataframe
-df <- read_csv('./openpose_csv/Dyad_10/Dyad-10.0_B_IDs-B013-B016_body_dyad.csv')
+df <- read_csv('./openpose_csv/Dyad_1/Dyad-1.0_A_IDs-25-27_body_dyad.csv')
 ```
 
 ### Check Data
@@ -308,10 +318,35 @@ kinematics_summary_batch
 Motion energy is a measure of the total amount of movement, calculated from the velocity of all keypoints.
 
 ```{r compute-motion-energy}
-# We use the 'df_jerk' dataframe as it contains all previously computed columns
-# The function uses the velocity columns ('v_*') to compute motion energy
-df_motion <- op_compute_motionenergy(df, 
+df_clean <- df |> 
+  op_remove_keypoints(remove_undetected_keypoints = TRUE,
+                      remove_specific_keypoints = c(10, 18),
+                      apply_removal_equally = TRUE) |> 
+  op_interpolate(confidence_threshold = .3, 
+                 treat_na_conf_as_low = TRUE, 
+                 handle_zeros = TRUE, 
+                 handle_missing = TRUE)
+
+df_clean |> op_plot_timeseries(keypoints = c(1, 2),
+                               overlay_axes = TRUE)
+
+# For motion energy we provide the raw datafile containing the x and y co-ordinates
+df_motion <- op_compute_motionenergy(df_clean, 
+                                     method = 'absolute',
+                                     aggregate_coordinates = TRUE,
+                                     aggregate_keypoints = FALSE,
                                      plot = TRUE)
+
+df_motion |> 
+  filter(keypoint == 5) |> 
+  ggplot(aes(x = frame, y = motion_energy, color = person)) +
+  geom_line(alpha = .7) +
+  labs(y = "Motion Energy",
+       x = "Frame",
+       color = "Dyad Member") -> pl_motion_energy
+
+ggsave(pl_motion_energy, 
+       filename = "motion_energy_plot.tiff", width = 10, height = 6)
 
 # The resulting dataframe 'df_motion' now has a 'motion_energy' column
 head(select(df_motion, frame, person, motion_energy))

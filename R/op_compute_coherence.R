@@ -139,7 +139,6 @@ op_compute_coherence <- function(data,
   )
 
   # Add the dyad_id to the summary table to make it self-contained.
-  # This places the dyad_id as the first column for clarity.
   if (nrow(coherence_summary) > 0) {
     coherence_summary <- data.frame(
       dyad_id = prepared_data$dyad_id,
@@ -187,4 +186,206 @@ op_compute_coherence <- function(data,
     message("Analysis completed successfully for ", prepared_data$dyad_id, " - ", prepared_data$region)
   }
   return(result)
+}
+
+
+# --- Internal Helper Functions ---
+
+#' Detect dyad column automatically
+#' @noRd
+.detect_dyad_column <- function(data, dyad_col = NULL) {
+  if (!is.null(dyad_col)) {
+    if (!dyad_col %in% names(data)) {
+      stop("Specified dyad_col '", dyad_col, "' not found in data.")
+    }
+    return(dyad_col)
+  }
+
+  candidate_cols <- c("base_filename", "dyad_id", "dyad", "pair_id",
+                      "session_id", "file_id", "id")
+
+  for (col in candidate_cols) {
+    if (col %in% names(data)) {
+      return(col)
+    }
+  }
+
+  pattern_cols <- names(data)[grepl("dyad|pair|session|file.*id|base.*file",
+                                    names(data), ignore.case = TRUE)]
+
+  if (length(pattern_cols) > 0) {
+    warning("Using column '", pattern_cols[1], "' as dyad identifier. ",
+            "Specify dyad_col explicitly if this is incorrect.")
+    return(pattern_cols[1])
+  }
+
+  stop("Cannot auto-detect dyad column. Please specify dyad_col parameter.")
+}
+
+#' Validate inputs and filter data to a single dyad/region.
+#' @noRd
+.resolve_and_filter_data <- function(data, dyad_id, region, dyad_col, region_col,
+                                     person_col, frame_col, motion_col, verbose) {
+
+  dyad_col <- .detect_dyad_column(data, dyad_col)
+
+  required_cols <- c(dyad_col, region_col, person_col, frame_col, motion_col)
+  missing_cols <- setdiff(required_cols, names(data))
+  if (length(missing_cols) > 0) {
+    stop("The following required columns are missing: ", paste(missing_cols, collapse = ", "))
+  }
+
+  if (is.null(dyad_id)) {
+    unique_dyads <- unique(data[[dyad_col]])
+    if (length(unique_dyads) == 1) {
+      dyad_id <- unique_dyads[1]
+      if (verbose) message("Auto-detecting and using the only available dyad: ", dyad_id)
+    } else {
+      stop("`dyad_id` is missing and multiple dyads were found. Available: ",
+           paste(unique_dyads, collapse = ", "),
+           "\nConsider using op_compute_coherence_batch() for multiple dyads.")
+    }
+  }
+
+  dyad_specific_data <- data[data[[dyad_col]] == dyad_id, ]
+  if (nrow(dyad_specific_data) == 0) stop("No data found for dyad_id '", dyad_id, "'.")
+
+  if (is.null(region)) {
+    unique_regions <- unique(dyad_specific_data[[region_col]])
+    if (length(unique_regions) == 1) {
+      region <- unique_regions[1]
+      if (verbose) message("Auto-detecting and using the only available region for this dyad: ", region)
+    } else {
+      stop("`region` is missing and multiple regions were found for this dyad. Available: ",
+           paste(unique_regions, collapse = ", "))
+    }
+  }
+
+  filtered_data <- dyad_specific_data[dyad_specific_data[[region_col]] == region, ]
+  if (nrow(filtered_data) == 0) stop("No data found for dyad '", dyad_id, "' and region '", region, "'.")
+
+  potential_id_cols <- c("session_id", "date", "condition", "group", "experiment_id")
+  additional_ids <- list()
+
+  for (col in potential_id_cols) {
+    if (col %in% names(filtered_data)) {
+      unique_vals <- unique(filtered_data[[col]])
+      if (length(unique_vals) == 1) {
+        additional_ids[[col]] <- unique_vals[1]
+      }
+    }
+  }
+
+  return(list(
+    filtered_data = filtered_data,
+    dyad_id = dyad_id,
+    region = region,
+    dyad_col = dyad_col,
+    additional_ids = additional_ids
+  ))
+}
+
+#' Prepare two aligned and trimmed time series for a dyad.
+#' @noRd
+.prepare_dyadic_timeseries <- function(filtered_data, person_ids, person_col, frame_col,
+                                       motion_col, verbose, start_frame, end_frame) {
+  if (is.null(person_ids)) {
+    person_ids <- unique(filtered_data[[person_col]])
+    if (verbose) message("Auto-detected persons: ", paste(person_ids, collapse = ", "))
+  }
+  if (length(person_ids) != 2) {
+    stop("Exactly two person IDs are required. Found: ", length(person_ids))
+  }
+  if (!all(person_ids %in% unique(filtered_data[[person_col]]))) {
+    stop("One or both specified person_ids not found in the data for this dyad/region.")
+  }
+
+  p1_data <- filtered_data[filtered_data[[person_col]] == person_ids[1], c(frame_col, motion_col)]
+  p2_data <- filtered_data[filtered_data[[person_col]] == person_ids[2], c(frame_col, motion_col)]
+
+  common_frames_all <- intersect(p1_data[[frame_col]], p2_data[[frame_col]])
+
+  effective_end_frame <- if (is.null(end_frame)) max(common_frames_all) else end_frame
+  analysis_frames <- common_frames_all[common_frames_all >= start_frame & common_frames_all <= effective_end_frame]
+
+  if (length(analysis_frames) == 0) {
+    stop("No common frames found within the specified start_frame and end_frame window.")
+  }
+  if (length(analysis_frames) < 32) {
+    warning("Time series has fewer than 32 common frames (n = ", length(analysis_frames), ") in the specified window. Results may be unreliable.")
+  }
+
+  t1 <- p1_data[p1_data[[frame_col]] %in% analysis_frames, ]
+  t2 <- p2_data[p2_data[[frame_col]] %in% analysis_frames, ]
+
+  t1 <- t1[order(t1[[frame_col]]), ]
+  t2 <- t2[order(t2[[frame_col]]), ]
+  names(t1) <- c("time", "value")
+  names(t2) <- c("time", "value")
+
+  return(list(
+    t1 = t1, t2 = t2, person_ids = person_ids,
+    common_frames = common_frames_all,
+    analysis_frames = analysis_frames
+  ))
+}
+
+#' Convert a frequency band in Hz to a scale/period index range.
+#' @noRd
+.hz_to_index <- function(hz_band, period_scale) {
+  if (length(hz_band) != 2 || !is.numeric(hz_band)) {
+    warning("Invalid Hz band specification. Skipping.")
+    return(NULL)
+  }
+  period_band <- rev(1 / hz_band)
+  indices <- which(period_scale >= period_band[1] & period_scale <= period_band[2])
+  if (length(indices) == 0) {
+    warning("No scales found for frequency band ", hz_band[1], "-", hz_band[2], " Hz. Skipping.")
+    return(NULL)
+  }
+  return(c(min(indices), max(indices)))
+}
+
+#' Summarise coherence values within frequency bands.
+#' @noRd
+.summarise_coherence <- function(wtc_result, freq_bands) {
+  coi_mask_logical <- outer(wtc_result$period, wtc_result$coi, FUN = "<=")
+  coi_mask <- ifelse(coi_mask_logical, 1, NA)
+  rsq_masked <- wtc_result$rsq * coi_mask
+
+  results_list <- lapply(names(freq_bands), function(band_name) {
+    hz_band <- freq_bands[[band_name]]
+    index_range <- .hz_to_index(hz_band, wtc_result$period)
+    if (is.null(index_range)) return(NULL)
+
+    band_coherence_values <- rsq_masked[index_range[1]:index_range[2], , drop = FALSE]
+
+    data.frame(
+      frequency_band = band_name,
+      hz_low = hz_band[1],
+      hz_high = hz_band[2],
+      coherence = mean(band_coherence_values, na.rm = TRUE),
+      coherence_sd = stats::sd(as.vector(band_coherence_values), na.rm = TRUE),
+      coherence_median = stats::median(as.vector(band_coherence_values), na.rm = TRUE),
+      n_valid_values = sum(!is.na(band_coherence_values)),
+      stringsAsFactors = FALSE
+    )
+  })
+
+  dplyr::bind_rows(results_list)
+}
+
+#' Plot wavelet coherence result safely.
+#' @noRd
+.plot_coherence <- function(wtc_result, dyad_id, region, person_ids, start_frame, end_frame) {
+  old_par <- graphics::par(no.readonly = TRUE)
+  on.exit(graphics::par(old_par), add = TRUE)
+
+  graphics::par(oma = c(0, 0, 0, 1), mar = c(5, 4, 4, 5) + 0.1)
+
+  plot_title <- paste0("Wavelet Coherence: ", dyad_id, " - ", region,
+                       "\nPersons: ", paste(person_ids, collapse = " vs "),
+                       " | Frames: ", start_frame, "-", end_frame)
+
+  graphics::plot(wtc_result, plot.cb = TRUE, plot.phase = TRUE, main = plot_title)
 }
