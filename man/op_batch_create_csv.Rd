@@ -2,7 +2,7 @@
 % Please edit documentation in R/op_batch_create_csv.R
 \name{op_batch_create_csv}
 \alias{op_batch_create_csv}
-\title{Process all Dyad Directories to Create CSV Files Using MultimodalR}
+\title{Process all Dyad Directories to Create CSV Files}
 \usage{
 op_batch_create_csv(
   input_base_path,

@@ -2,45 +2,73 @@
 % Please edit documentation in R/op_interpolate.R
 \name{op_interpolate}
 \alias{op_interpolate}
-\title{Interpolate missing or low-confidence values in a dataset}
+\title{Interpolate missing or low-quality values in OpenPose time-series data}
 \usage{
 op_interpolate(
   data,
-  confidence_threshold,
-  missing = TRUE,
-  treat_na_conf_as_low = FALSE
+  method = "median",
+  confidence_threshold = 0.3,
+  handle_missing = TRUE,
+  handle_zeros = FALSE,
+  treat_na_conf_as_low = TRUE,
+  grouping_vars = c("person", "region"),
+  polynomial_degree = 3,
+  max_gap = Inf,
+  smooth_factor = 0,
+  extrapolation = "none",
+  verbose = FALSE
 )
 }
 \arguments{
-\item{data}{A data frame containing x, y, confidence columns, and grouping columns (\code{person}, \code{region}).}
+\item{data}{A data frame containing OpenPose keypoint data with x, y, and confidence columns.}
 
-\item{confidence_threshold}{A numeric value specifying the confidence threshold below which
-values will be interpolated.}
+\item{method}{Character string specifying the interpolation method. Options include:
+"spline", "linear", "polynomial", "kalman", "locf" (last observation carried forward),
+"nocb" (next observation carried backward), "mean", "median". Default is "median".}
 
-\item{missing}{Logical. If TRUE, interpolate missing values (\code{NA}) in addition to low-confidence values.}
+\item{confidence_threshold}{Numeric, NA, or FALSE. The confidence score below which
+data points are considered problematic and targeted for interpolation. If \code{NA}
+or \code{FALSE}, this check is skipped. Default is 0.3.}
 
-\item{treat_na_conf_as_low}{Logical. If TRUE, treat NA in the confidence column as low confidence.}
+\item{handle_missing}{Logical. If \code{TRUE} (default), \code{NA} values in coordinate
+columns will be targeted for interpolation.}
+
+\item{handle_zeros}{Logical. If \code{TRUE}, coordinate values of exactly 0 will be
+targeted for interpolation. Default is \code{FALSE}.}
+
+\item{treat_na_conf_as_low}{Logical. If \code{TRUE} (default), \code{NA} values in a
+confidence column are treated as having low confidence (i.e., 0).}
+
+\item{grouping_vars}{Character vector of column names to group the data by before
+interpolation (e.g., \code{c("person", "region")}). Interpolation is performed
+independently for each group.}
+
+\item{polynomial_degree}{Integer. The degree of the polynomial to use when
+\code{method = "polynomial"}. Default is 3.}
+
+\item{max_gap}{Integer. The maximum number of consecutive problematic frames to
+interpolate. Gaps larger than this value will be ignored. Default is \code{Inf} (no limit).}
+
+\item{smooth_factor}{Numeric. A smoothing factor for spline interpolation (currently unused,
+for future compatibility). Default is 0.}
+
+\item{extrapolation}{Character string specifying how to handle values outside the
+range of good data. Not yet fully implemented. Default is "none".}
+
+\item{verbose}{Logical. If \code{TRUE}, prints detailed messages about the process.}
 }
 \value{
-A modified data frame with interpolated x and y values for low-confidence or missing rows.
+A data frame identical in structure to the input \code{data}, but with
+problematic values replaced by interpolated estimates. Two new columns are added:
+\code{interpolated_points_count_per_row} and \code{interpolation_method_used}.
 }
 \description{
-This function performs interpolation for x and y coordinate columns in a dataset
-based on confidence thresholds. It groups the data by \code{person} and \code{region} and
-uses spline interpolation to estimate missing or low-confidence values.
-}
-\examples{
-# Load example data from the package
-data_path <- system.file("extdata/csv_data/A-B_body_dyad.csv", package = "duet")
-data <- read.csv(data_path)
+This function performs various interpolation methods for x and y coordinate columns
+in OpenPose datasets based on confidence thresholds, missing values, or zero values.
+It groups the data by specified grouping variables and uses the selected
+interpolation method to estimate problematic values.
 
-# Interpolate missing or low-confidence values
-result <- op_interpolate(
-  data = data,
-  confidence_threshold = 0.5,
-  missing = TRUE,
-  treat_na_conf_as_low = TRUE
-)
-
-print(result)
+The function is designed to be robust, automatically detecting the relevant
+OpenPose columns (e.g., \verb{x1, y1, c1}) and applying interpolation logic
+to each keypoint within each specified group (e.g., for each person).
 }

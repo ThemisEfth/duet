@@ -10,38 +10,66 @@ op_plot_timeseries(
   free_y = TRUE,
   overlay_axes = FALSE,
   person = "both",
-  max_facets = 10
+  facet_by_person = TRUE,
+  max_facets = 10,
+  x_axis = "frame",
+  verbose = FALSE
 )
 }
 \arguments{
-\item{data}{Data frame containing the keypoint data.}
+\item{data}{Data frame containing the keypoint data. Must include a 'frame' column for the x-axis.}
 
-\item{keypoints}{Character vector of keypoints to include in the plot. When \code{overlay_axes = TRUE}, input keypoints as "0", "1", "2", etc. When \code{overlay_axes = FALSE}, input keypoints as "x0", "y0", "x1", "y1", etc.}
+\item{keypoints}{Character vector of keypoint identifiers to plot (e.g., "0", "1", "Nose").
+If NULL (default), the first four available keypoint identifiers are used.}
 
 \item{free_y}{Boolean indicating if the y-axis should be free in facet_wrap (default is TRUE).}
 
-\item{overlay_axes}{Boolean indicating if 'x' and 'y' columns should be overlaid in the same plot (default is FALSE).}
+\item{overlay_axes}{Boolean indicating if different metric types (x, y, v_, a_, j_) for the
+same keypoint ID should be overlaid in the same plot facet.
+Default is FALSE.}
 
-\item{person}{Character string specifying which person to plot ("left", "right", or "both", default is "both").}
+\item{person}{Character string specifying which person to plot. Options: "left", "right", or "both".
+Requires a 'person' column in \code{data}. Default is "both".}
 
-\item{max_facets}{Integer indicating the maximum number of facets allowed (default is 10). If the total facets exceed this number, the function returns \code{NULL} with a warning.}
+\item{facet_by_person}{Boolean indicating if data for different persons (when \code{person = "both"})
+should be in separate facets (\code{TRUE}, default) or overlaid on the same
+facets (\code{FALSE}).}
+
+\item{max_facets}{Integer indicating the maximum number of facets allowed (default is 10).
+If the total facets exceed this number, the function returns \code{NULL} with a warning.}
+
+\item{x_axis}{Character string for the column to be used as the x-axis (time). Default is "frame".}
+
+\item{verbose}{Logical, if TRUE, prints messages about default keypoint selection. Default is FALSE.}
 }
 \value{
-A ggplot object or NULL if the maximum number of facets is exceeded.
+A ggplot object or NULL if the maximum number of facets is exceeded or no data can be plotted.
 }
 \description{
-This function plots the specified keypoints over time with facet wrapping.
-It allows the user to overlay axes or separate them, and to filter the data by person.
-If the number of facets exceeds the \code{max_facets} limit, a warning is issued, and the function will not return a plot.
+This function plots specified keypoints (or defaults) over time with facet wrapping.
+It handles columns starting with x, y, v_, a_, or j_.
+Color and linetype are used to distinguish overlaid persons or overlaid metric types.
 }
 \examples{
-# Load example data from the package
-data_path <- system.file("extdata/csv_data/dyad_1/A_body.csv", package = "duet")
-data <- read.csv(data_path)
+# Create sample data
+sample_data <- data.frame(
+  frame = 1:100,
+  x0 = rnorm(100), y0 = rnorm(100), v_0 = rnorm(100, 5),
+  x1 = rnorm(100, 2), y1 = rnorm(100, 2), a_1 = rnorm(100, 10),
+  x2 = rnorm(100, -2), y2 = rnorm(100, -2), j_2 = rnorm(100, 1),
+  x3 = rnorm(100, 1), y3 = rnorm(100, 1),
+  person = rep(c("P1", "P2"), each = 50)
+)
 
-# Plot with overlay_axes = TRUE
-op_plot_timeseries(data = data, keypoints = c("0", "1"), overlay_axes = TRUE, person = "both")
+# Ex 1: Overlay axes, facet by person.
+# Color by metric_type, linetype by metric_type.
+# op_plot_timeseries(data = sample_data, overlay_axes = TRUE, person = "both",
+#                    facet_by_person = TRUE)
 
-# Plot with overlay_axes = FALSE
-op_plot_timeseries(data = data, keypoints = c("0", "1"), overlay_axes = FALSE, person = "left")
+# Ex 2: Overlay axes, overlay persons.
+# Color by person, linetype by person.
+# (metric_types x,y,v for a keypoint will be same color/linetype for a person)
+# op_plot_timeseries(data = sample_data, overlay_axes = TRUE, person = "both",
+#                    facet_by_person = FALSE)
+
 }
