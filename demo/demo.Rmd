@@ -1,145 +1,344 @@
 ---
-title: "R Notebook"
-output: html_notebook
+title: 'Duet Package: Single Person Analysis Workflow'
+author: "Your Name"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    df_print: paged
+  html_notebook:
+    toc: true
+    toc_float: true
+    code_folding: show
+    theme: flatly
 ---
 
-# Install Duet
-
-```{r eval=FALSE, include=FALSE}
-install.packages('duet')
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 10,
+  fig.height = 6,
+  dpi = 300
+)
 ```
 
-# Optional Install other packages 
+# Duet Package Tutorial: Single Person Analysis
 
-```{r eval=FALSE, include=FALSE}
-# Check and optionally load required packages
-required_packages <- c("tidyverse", "magick", "ggplot2", "cowplot", "rempsyc")
+This tutorial demonstrates a complete workflow for analyzing OpenPose data from a **single individual** using the `duet` R package.
 
-invisible(lapply(required_packages, function(pkg) {
-  if (!requireNamespace(pkg, quietly = TRUE)) {
-    message(paste("Package", pkg, "is not installed. Install it using install.packages('", pkg, "')", sep = ""))
-  } else {
-    library(pkg, character.only = TRUE)
-  }
-}))
+---
+
+## 1. Setup and Installation
+
+### Install Required Packages
+
+The chunk below will install any packages you are missing. It is set to `eval=FALSE` so it does not run automatically. Run it manually in the R console if you need to install packages for the first time.
+
+```{r install-packages}
+# Install duet from GitHub if you haven't already
+# devtools::install_github("themisefth/duet")
+
+# Core packages for this workflow
+required_packages <- c(
+  "tidyverse", "cowplot", "rempsyc", "magick", "flextable", "remotes")
+
+# Install any missing packages from the list
+new_packages <- required_packages[!(required_packages %in% installed.packages()[,"Package"])]
+if(length(new_packages)) install.packages(new_packages)
 ```
 
-# Load packages
+### Load Libraries
 
-```{r}
+```{r load-libraries}
 library(tidyverse)
 library(duet)
 library(magick)
 library(ggplot2)
 library(cowplot)
 library(rempsyc)
+library(flextable)
+
+# Set a consistent theme for ggplot2 plots
+theme_set(theme_classic(base_size = 12))
 ```
 
-# Import data
+### Create Directory Structure
+
+This will create the necessary folders in your project directory to store raw data and outputs.
+
+```{r create-directories}
+output_dirs <- c("./openpose_json", "./openpose_csv", "./figures")
+for(dir_path in output_dirs) {
+  if (!dir.exists(dir_path)) dir.create(dir_path, recursive = TRUE)
+}
+```
+
+---
+
+## 2. Data Conversion: JSON to CSV
+
+The first step is to convert the raw JSON files from OpenPose into a single, tidy CSV file.
+
+### Understanding Your Data Structure
+
+Place your raw OpenPose JSON files in a dedicated folder. For this example, we assume they are in `./openpose_json/Individual_01/`.
+
+```text
+./openpose_json/
+├── Individual_01/
+│   ├── frame_000001_keypoints.json
+│   ├── frame_000002_keypoints.json
+│   └── ...
+└── ...
+```
+
+### Convert JSON to a Single Person CSV
+
+This function reads all JSON files in the specified directory and converts them into one CSV file. We set `export_type = 'person'` and specify `person = 1` to ensure we only process data for the first person detected by OpenPose.
+
+```{r convert-single-dyad}
+op_create_csv(
+  input_path = './openpose_json/Dyad_10',
+  output_path = './openpose_csv/Dyad_10',
+  model = 'body',
+  include_filename = TRUE,
+  export_type = 'dyad')
+```
+
+---
+
+## 3. Data Import and Initial Checks
+
+### Import Data
+
+Load the CSV file you just created.
+
+```{r import-data}
+# Read the CSV file into a dataframe
+df <- read_csv('./openpose_csv/Dyad_10/Dyad-10.0_B_IDs-B013-B016_body_dyad.csv')
+```
+
+### Check Data
+
+It's good practice to visually inspect a frame to ensure the data has loaded correctly.
+
+```{r check-data}
+# Plot a single frame to check the pose
+op_plot_openpose(df, 
+                 person = "both",
+                 frame_num = 10, 
+                 lines = TRUE)
+```
+
+---
+
+## 4. Data Quality and Preprocessing
+
+### Assess Data Quality
+
+The `op_plot_quality()` function helps you understand the completeness (how many keypoints were detected) and confidence (OpenPose's certainty) of your data over time.
+
+```{r plot-quality}
+# First, apply human-readable labels to the keypoints
+df_labelled <- op_apply_keypoint_labels(df)
+
+# Plot data completeness
+p_completeness <- op_plot_quality(df_labelled, 
+                                  plot_type = 'completeness',
+                                  threshold_line = 80) # 80% threshold line
+
+# Plot tracking confidence
+p_confidence <- op_plot_quality(df_labelled, 
+                                plot_type = 'confidence',
+                                threshold_line = 80) # Confidence threshold of 80%
+
+# Combine plots for a comprehensive view
+p_quality_combined <- plot_grid(p_completeness, p_confidence, ncol = 1, labels = 'auto')
+
+p_quality_combined
+```
+
+### Summarise your data
+
+At any stage you can produce summary statistics (mean, median, skew etc) for your df
 
 ```{r}
-df <- read.csv('./dyad_16.csv')
+op_summarise(df)
 ```
 
-# Check Data
+### Visualise Time Series
+
+Plot the movement of specific keypoints over time to identify noise or gaps.
+
+```{r plot-timeseries}
+# Plot the x and y coordinates for Nose (1) and Wrists (4, 7)
+p_timeseries <- op_plot_timeseries(df, 
+                                   free_y = TRUE, # Allow y-axes to have different scales
+                                   overlay = TRUE, # Overlay x and y on the same plot
+                                   max_facets = 20) 
+
+p_timeseries
+```
+
+### Interpolate missing data
 
 ```{r}
-df |> op_plot_openpose(frame_num = 2, person = "both", lines = TRUE)
+df_interp <- op_interpolate(df, 
+                            confidence_threshold = .3, # Set a confidence threshold of 80%
+                            treat_na_conf_as_low = TRUE,
+                            handle_zeros = TRUE,
+                            handle_missing = TRUE)
+
+p_timeseries_interp <- op_plot_timeseries(df_interp, 
+                                   free_y = TRUE, # Allow y-axes to have different scales
+                                   overlay = TRUE, # Overlay x and y on the same plot
+                                   max_facets = 20) 
+
+p_timeseries_interp
 ```
 
-# Apply labels and plot the data quality
 
-```{r}
-df |> 
-  op_apply_keypoint_labels() |> 
-  op_plot_quality(plot_type = 'completeness', 
-                  threshold_line = 80) -> pl_completeness
+### Smooth Time Series Data
 
-pl_completeness
+Use a moving average to smooth the data, which is often necessary before computing velocity or acceleration. Here, we smooth the x-coordinate of the `Neck` keypoint as an example.
 
-df |> 
-  op_plot_quality(plot_type = 'confidence', 
-                  threshold_line = 80) -> pl_conf
-
-pl_conf
-
-plot_grid(pl_completeness, pl_conf, ncol = 1, labels = 'auto') -> pl_qual_both
-
-df |> 
-  op_apply_keypoint_labels() |> 
-  op_plot_quality(plot_type = 'both', 
-                  threshold_line = 80) -> pl_qual
-
-pl_qual
-
-ggsave('../figures/Fig2_Quality.tiff', 
-       pl_qual_both, 
-       width = 6, 
-       height = 5,
-       dpi = 300)
+```{r smooth-data}
+# Apply moving-average smoothing and plot the result
+op_smooth_timeseries(df, 
+                     keypoints = c('x1'), # Keypoint '1' is the Neck
+                     method = 'rollmean',
+                     rollmean_width = 5, # 5-frame rolling window
+                     plot = TRUE,
+                     side = 'right')
 ```
 
-# Plot timeseries data
+---
 
-```{r}
-df |> 
-  op_plot_timeseries(keypoints = c('1', '2', '3'),
-                     free_y = TRUE,
-                     overlay = TRUE,
-                     person = 'both',
-                     max_facets = 20) -> pl_ts
+## 5. Kinematic Analysis
 
-pl_ts
+Now we can compute kinematic variables like velocity, acceleration, and jerk.
 
-ggsave('./Fig3_Timeseries.tiff', 
-       pl_ts, 
-       width = 6, 
-       height = 5,
-       dpi = 300)
+### Compute Velocity
+
+Velocity is the rate of change of position. We compute it for all keypoints.
+
+```{r compute-velocity}
+df <- op_apply_keypoint_labels(df)
+
+# Compute velocity and add it to the dataframe
+df_velocity <- op_compute_velocity(df, 
+                                   merge_xy = TRUE, # Combine x and y velocity
+                                   overwrite = FALSE, # This deletes your original columns for a tidier dataframe, retain if you plan to compute acceleration and jerk
+                                   fps = 30) # Your video's frame rate
+
+# Display a sample of the velocity data
+df_velocity %>%
+  filter(frame > 1 & frame < 6) %>%
+  nice_table()
 ```
 
-# Apply moving-average smoothing
+### Compute Acceleration
 
-```{r}
-df |> 
-  op_smooth_timeseries(keypoints = c('x1'),
-                       method = 'rollmean',
-                       rollmean_width = 100,
-                       plot = TRUE,
-                       side = 'right')
+Acceleration is the rate of change of velocity.
+
+```{r compute-acceleration}
+# We use the velocity dataframe as input
+df_acceleration <- op_compute_acceleration(df_velocity, 
+                                           merge_xy = TRUE,
+                                           overwrite = FALSE,
+                                           fps = 30)
+
+# Display a sample of the velocity data
+df_acceleration %>%
+  filter(frame > 1 & frame < 6) %>%
+  nice_table()
 ```
 
-# Compute velocity
+### Compute Jerk
 
-```{r}
-df |> 
-  op_compute_velocity(merge_xy = TRUE,
-                      overwrite = TRUE,
-                      fps = 30) -> df_velocity
+Jerk (or jerkiness) is the rate of change of acceleration, often used as a measure of movement smoothness.
 
-df_velocity |> 
-  filter(frame != 1) |> 
-    filter(frame < 6) |> 
-  select(person, frame, region, v_1, v_2, v_3, v_4) |>
-  nice_table() -> tbl
+```{r compute-jerk}
+# We use the acceleration dataframe as input
+df_jerk <- op_compute_jerk(df_acceleration,
+                           merge_xy = TRUE,
+                           overwrite = TRUE,
+                           fps = 30)
 
-flextable::save_as_docx(tbl, path = "./velocity.docx")
+# Display a sample of the velocity data
+df_jerk %>%
+  filter(frame > 1 & frame < 6) %>%
+  nice_table()
 ```
 
-# Compute acceleration
+### Average kinematics overtime for analysis
 
-```{r}
-df_velocity |> 
-  op_compute_acceleration(merge_xy = TRUE,
-                          overwrite = TRUE,
-                          fps = 30) -> df_acceleration
+```{r average-kinematics}
+# Aggregate results to body parts and then to overall measures
+kinematics_summary_batch <- df_jerk %>%
+  select(base_filename, person, starts_with("v_"), starts_with("a_"), starts_with("j_")) %>%
+  group_by(base_filename, person) %>%
+  summarise(across(everything(), ~mean(.x, na.rm = TRUE)), .groups = "drop") %>%
+  rowwise() %>%
+  transmute(
+    base_filename, person, 
+    v_head = mean(c(v_Nose, v_REye, v_LEye), na.rm = TRUE),
+    a_head = mean(c(a_Nose, a_REye, a_LEye), na.rm = TRUE),
+    j_head = mean(c(j_Nose, j_REye, j_LEye), na.rm = TRUE),
+    v_arms = mean(c(v_RWrist, v_RElbow, v_LWrist, v_LElbow), na.rm = TRUE),
+    a_arms = mean(c(a_RWrist, a_RElbow, a_LWrist, a_LElbow), na.rm = TRUE),
+    j_arms = mean(c(j_RWrist, j_RElbow, j_LWrist, j_LElbow), na.rm = TRUE),
+    velocity_total = mean(c(v_head, v_arms), na.rm = TRUE),
+    acceleration_total = mean(c(a_head, a_arms), na.rm = TRUE),
+    jerk_total = mean(c(j_head, j_arms), na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+kinematics_summary_batch
+
+# You can now save this file for further analysis
 ```
 
-# Compute jerkiness
+---
 
-```{r}
-df_acceleration |> 
-  op_compute_acceleration(merge_xy = TRUE,
-                          overwrite = TRUE,
-                          fps = 30) -> df_jerkiness
+## 6. Motion Energy Analysis
+
+Motion energy is a measure of the total amount of movement, calculated from the velocity of all keypoints.
+
+```{r compute-motion-energy}
+# We use the 'df_jerk' dataframe as it contains all previously computed columns
+# The function uses the velocity columns ('v_*') to compute motion energy
+df_motion <- op_compute_motionenergy(df, 
+                                     plot = TRUE)
+
+# The resulting dataframe 'df_motion' now has a 'motion_energy' column
+head(select(df_motion, frame, person, motion_energy))
 ```
+
+---
+
+## 7. Synchrony Analysis (Example for Dyadic Data)
+
+Coherence analysis measures the synchrony between two time series (e.g., the motion energy of two people). It is therefore typically used for dyadic data. For this single-person tutorial, we will create a **dummy second person's data** just to demonstrate the function's syntax.
+
+```{r compute-coherence}
+# Run coherance analysis for a single dyad
+coherence_results <- op_compute_coherence(df_motion, plot = TRUE)
+```
+
+```{r output-coherence}
+# View the coherence results summary
+coherence_results
+```
+
+---
+
+## Session Information
+
+This chunk documents the R version and loaded packages, which is crucial for reproducibility.
+
+```{r session-info}
+# Document your computational environment
+sessionInfo()

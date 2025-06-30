@@ -50,6 +50,7 @@ op_plot_openpose <- function(data, frame_num, person = c("both", "left", "right"
                              hide_labels = FALSE, left_color = "blue", right_color = "red",
                              background_color = "white", background_colour = NULL,
                              line_width = 2, point_size = 1.5, text_color = "black") {
+
   # Resolve spelling differences
   background_color <- if (!is.null(background_colour)) background_colour else background_color
 
@@ -70,21 +71,15 @@ op_plot_openpose <- function(data, frame_num, person = c("both", "left", "right"
     is.character(text_color)
   )
 
-  # Save original par settings and restore them on exit
   oldpar <- par(no.readonly = TRUE)
   on.exit(par(oldpar), add = TRUE)
-
-  # Set the background color of the plotting window
   par(bg = background_color)
 
-  # Filter the dataframe for the specified frame
   df_frame <- subset(data, data$frame == frame_num)
   if (nrow(df_frame) == 0) stop("No data found for the specified frame.")
 
-  # Determine persons to plot
   persons <- if (person == "both") c("left", "right") else person
 
-  # Setup the plot canvas
   plot(
     1,
     type = "n",
@@ -102,18 +97,27 @@ op_plot_openpose <- function(data, frame_num, person = c("both", "left", "right"
     col.axis = text_color
   )
 
+  # OpenPose BODY_25 connection pairs (index starts at 0 in OpenPose)
+  connections <- matrix(c(
+    0,1, 1,2, 2,3, 3,4,        # Right arm
+    1,5, 5,6, 6,7,            # Left arm
+    1,8, 8,9, 9,10,           # Torso
+    10,11, 11,22, 22,23, 11,24, # Right leg
+    8, 12, 12,13, 13,14,      # Left leg
+    0,15, 15,17, 0,16, 16,18, # Face/ears
+    14,21, 14,19, 19, 20              # Feet
+  ), ncol = 2, byrow = TRUE) + 1  # Add 1 because R is 1-indexed
+
   for (p in persons) {
-    # Filter by person
     df_person <- subset(df_frame, df_frame$person == p)
     if (nrow(df_person) == 0) next
 
-    # Extract coordinates
     x_coords <- as.numeric(unlist(df_person[, grep("^x\\d+$", names(df_person))]))
     y_coords <- as.numeric(unlist(df_person[, grep("^y\\d+$", names(df_person))]))
+    color_to_use <- if (p == "left") left_color else right_color
 
-    # Plot the points
+    # Plot points
     for (i in seq_along(x_coords)) {
-      color_to_use <- if (p == "left") left_color else right_color
       if (x_coords[i] > 0 && y_coords[i] > 0) {
         points(
           x_coords[i],
@@ -122,6 +126,30 @@ op_plot_openpose <- function(data, frame_num, person = c("both", "left", "right"
           col = color_to_use,
           cex = point_size
         )
+      }
+    }
+
+    # Plot lines if enabled
+    if (lines) {
+      for (i in 1:nrow(connections)) {
+        kp1 <- connections[i, 1]
+        kp2 <- connections[i, 2]
+
+        if (kp1 <= length(x_coords) && kp2 <= length(x_coords)) {
+          x1 <- x_coords[kp1]
+          y1 <- y_coords[kp1]
+          x2 <- x_coords[kp2]
+          y2 <- y_coords[kp2]
+
+          if (x1 > 0 && y1 > 0 && x2 > 0 && y2 > 0) {
+            segments(
+              x1, 1080 - y1,
+              x2, 1080 - y2,
+              col = color_to_use,
+              lwd = line_width
+            )
+          }
+        }
       }
     }
   }

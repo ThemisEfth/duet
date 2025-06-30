@@ -1,4 +1,4 @@
-#' Process all Dyad Directories to Create CSV Files Using MultimodalR
+#' Process all Dyad Directories to Create CSV Files
 #'
 #' This function processes all dyad directories in the specified input base path,
 #' applying the `op_create_csv` function from the package, and saves

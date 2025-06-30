@@ -11,6 +11,7 @@
 #' @param frame_width Width of the frame. Defaults to 1920.
 #' @param export_type Type of export: "individual" to export separate CSV files for each person,
 #'   "dyad" to export both persons' data into a single CSV file. Defaults to "individual".
+#' @param use_openpose_order Logical. If TRUE, assigns person 1 and 2 based on the order given by OpenPose rather than position on screen (left/right). Defaults to FALSE.
 #'
 #' @return No return value. This function is called for its side effects, which include writing
 #' CSV files to the specified output directory.
@@ -21,28 +22,8 @@
 #' @importFrom stats setNames
 #' @importFrom tools file_path_sans_ext
 #' @importFrom parallel detectCores
-#'
-#' @examples
-#' \donttest{
-#' # Path to example JSON files included with the package
-#' input_path <- system.file("extdata/json_files", package = "duet")
-#'
-#' # Temporary output directory
-#' output_path <- tempfile("output_csv")
-#' dir.create(output_path)
-#'
-#' # Run the function using the provided data
-#' op_create_csv(
-#'   input_path = input_path,
-#'   output_path = output_path,
-#'   model = "body",
-#'   include_filename = TRUE,
-#'   include_labels = TRUE,
-#'   frame_width = 1920,
-#'   export_type = "dyad"
-#' )
-#' }
-op_create_csv <- function(input_path, output_path = input_path, model = "all", include_filename = FALSE, include_labels = FALSE, frame_width = 1920, export_type = "dyad") {
+
+op_create_csv <- function(input_path, output_path = input_path, model = "all", include_filename = TRUE, include_labels = FALSE, frame_width = 1920, export_type = "dyad", use_openpose_order = FALSE) {
   if(missing(input_path)) stop('Argument "input_path" must be specified. Path to JSON (*.json) files, including trailing "/"', call. = FALSE)
   if(!file.exists(output_path)) dir.create(output_path)
 
@@ -52,8 +33,6 @@ op_create_csv <- function(input_path, output_path = input_path, model = "all", i
   column_names_body <- c("region", "person", unlist(strsplit(sprintf("x%1$d-y%1$d-c%1$d", seq(0, 24)), "-")))
   column_names_hands <- c("region", "person", unlist(strsplit(sprintf("x%1$d-y%1$d-c%1$d", seq(0, 20)), "-")))
   column_names_face <- c("region", "person", unlist(strsplit(sprintf("x%1$d-y%1$d-c%1$d", seq(0, 69)), "-")))
-
-  middle_of_screen <- frame_width / 2
 
   process_file <- function(f) {
     base_filename <- sub("_\\d+_keypoints$", "", tools::file_path_sans_ext(basename(f)))
@@ -66,15 +45,20 @@ op_create_csv <- function(input_path, output_path = input_path, model = "all", i
     person1_pose <- keypoints(person1, "pose_keypoints_2d")
     person2_pose <- keypoints(person2, "pose_keypoints_2d")
 
-    person1_position <- mean(person1_pose[1:2])
-    person2_position <- mean(person2_pose[1:2])
-
-    if (person1_position <= person2_position) {
-      right_person <- person2
+    if (use_openpose_order) {
       left_person <- person1
+      right_person <- person2
     } else {
-      right_person <- person1
-      left_person <- person2
+      person1_position <- mean(person1_pose[1:2])
+      person2_position <- mean(person2_pose[1:2])
+
+      if (person1_position <= person2_position) {
+        left_person <- person1
+        right_person <- person2
+      } else {
+        left_person <- person2
+        right_person <- person1
+      }
     }
 
     append_data <- function(data_list, region, person, keypoints) {

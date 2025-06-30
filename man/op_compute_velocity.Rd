@@ -2,47 +2,70 @@
 % Please edit documentation in R/op_compute_velocity.R
 \name{op_compute_velocity}
 \alias{op_compute_velocity}
-\title{Compute Velocity}
+\title{Compute Velocity and Optionally Adjust Boundary Values}
 \usage{
 op_compute_velocity(
   data,
   fps = NULL,
   video_duration = NULL,
   overwrite = FALSE,
-  merge_xy = FALSE
+  merge_xy = FALSE,
+  boundary_velocity_treatment = "none"
 )
 }
 \arguments{
-\item{data}{A data frame containing the columns to process.}
+\item{data}{A data frame containing the columns to process. Must have at least 2 rows
+if velocity calculation is expected.}
 
 \item{fps}{Frames per second, used to compute velocity.}
 
 \item{video_duration}{Video duration in seconds, used to compute fps.}
 
-\item{overwrite}{Logical value indicating whether to remove original 'x' and 'y' columns.}
+\item{overwrite}{Logical value indicating whether to remove original 'x' and 'y' columns
+after velocity calculation. Default is FALSE.}
 
-\item{merge_xy}{Logical value indicating whether to merge x and y columns using Euclidean distance.}
+\item{merge_xy}{Logical value indicating whether to merge x and y columns using
+Euclidean distance for velocity. If FALSE, velocity is computed
+for x and y components separately. Default is FALSE.}
+
+\item{boundary_velocity_treatment}{Character string specifying how to treat the first and
+last calculated velocity values in the output series.
+Options: "none" (default - no change),
+"set_na" (sets the first and last calculated velocities to NA).}
 }
 \value{
-A data frame with velocity columns added and 'c' columns removed.
+A data frame with velocity columns. If \code{boundary_velocity_treatment = "set_na"},
+the first and last rows of the velocity columns will have NA values.
+The overall data frame will have one less row than the input due to the
+removal of the initial NA velocity row.
 }
 \description{
-This function calculates the velocity for each column that begins with 'x' and 'y'
-and removes all columns that start with 'c'. It takes either the fps or the video
-duration as input to compute the velocity.
+This function calculates the velocity for each column that begins with 'x' and 'y'.
+The first row of the data frame (containing initial NA velocities) is removed.
+Optionally, the first and last calculated velocity values in the returned series
+can be set to NA if they are suspected to be artifacts.
+The function also removes all columns that start with 'c'.
 }
 \examples{
-# Load example data from the package
-data_path <- system.file("extdata/csv_data/A-B_body_dyad.csv", package = "duet")
-data <- read.csv(data_path)
-
-# Compute velocity
-result <- op_compute_velocity(
-  data = data,
-  fps = 30,
-  overwrite = FALSE,
-  merge_xy = TRUE
+# Create sample data
+sample_data <- data.frame(
+  frame = 1:10,
+  x0 = cumsum(rnorm(10)), y0 = cumsum(rnorm(10)), c0 = rnorm(10),
+  x1 = cumsum(rnorm(10)), y1 = cumsum(rnorm(10)), c1 = rnorm(10)
 )
 
-print(result)
+# Compute velocity, default boundary treatment
+result_default <- op_compute_velocity(
+  data = sample_data,
+  fps = 30
+)
+print(result_default) # Should have 9 rows
+
+# Compute velocity, set boundary velocities to NA
+result_boundary_na <- op_compute_velocity(
+  data = sample_data,
+  fps = 30,
+  boundary_velocity_treatment = "set_na"
+)
+print(result_boundary_na) # First and last velocity values should be NA
 }

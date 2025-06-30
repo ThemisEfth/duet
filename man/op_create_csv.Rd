@@ -8,10 +8,11 @@ op_create_csv(
   input_path,
   output_path = input_path,
   model = "all",
-  include_filename = FALSE,
+  include_filename = TRUE,
   include_labels = FALSE,
   frame_width = 1920,
-  export_type = "dyad"
+  export_type = "dyad",
+  use_openpose_order = FALSE
 )
 }
 \arguments{
@@ -29,6 +30,8 @@ op_create_csv(
 
 \item{export_type}{Type of export: "individual" to export separate CSV files for each person,
 "dyad" to export both persons' data into a single CSV file. Defaults to "individual".}
+
+\item{use_openpose_order}{Logical. If TRUE, assigns person 1 and 2 based on the order given by OpenPose rather than position on screen (left/right). Defaults to FALSE.}
 }
 \value{
 No return value. This function is called for its side effects, which include writing
@@ -37,25 +40,4 @@ CSV files to the specified output directory.
 \description{
 This function reads JSON files from the specified directory, processes the pose keypoints,
 and saves the results into CSV files.
-}
-\examples{
-\donttest{
-# Path to example JSON files included with the package
-input_path <- system.file("extdata/json_files", package = "duet")
-
-# Temporary output directory
-output_path <- tempfile("output_csv")
-dir.create(output_path)
-
-# Run the function using the provided data
-op_create_csv(
-  input_path = input_path,
-  output_path = output_path,
-  model = "body",
-  include_filename = TRUE,
-  include_labels = TRUE,
-  frame_width = 1920,
-  export_type = "dyad"
-)
-}
 }
