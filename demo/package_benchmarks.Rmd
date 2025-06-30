@@ -1,0 +1,214 @@
+---
+title: "Duet Package Performance Benchmarks"
+author: "Your Name"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    toc: true
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+    theme: flatly
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 10,
+  fig.height = 6,
+  dpi = 300,
+  eval = TRUE # Ensure chunks are evaluated
+)
+```
+
+# Introduction
+
+This notebook provides performance benchmarks for the `duet` R package using a real-world dyadic dataset. The focus is on understanding the computational cost and memory usage of the core data processing pipeline, moving from raw coordinate data to synchrony analysis.
+
+This approach replaces previous simulations with direct calls to package functions, offering a more accurate measure of performance on tasks such as interpolation, kinematic variable calculation, and coherence analysis.
+
+## 1. Package Installation and Setup
+
+```{r load-libraries}
+# Load required libraries for benchmarking and data manipulation
+library(remotes)   # For installing the github version of duet
+library(bench)     # For benchmarking (preferred over microbenchmark)
+library(ggplot2)   # For plotting
+library(dplyr)     # For data manipulation
+library(tidyr)     # For data tidying
+library(knitr)     # For table formatting
+library(plotly)    # For interactive plots
+```
+
+```{r}
+remotes::install_github("ThemisEfth/duet")
+
+library(duet)
+```
+
+## 2. Data Setup: Loading a Real Dyadic CSV
+
+All subsequent benchmarks will be run on a single, pre-processed CSV file containing dyadic motion data. This ensures that our measurements reflect real-world performance.
+
+```{r import-data}
+# Define the path to your data
+# IMPORTANT: Make sure this file exists in the specified path.
+csv_path <- './openpose_csv/Dyad_10/Dyad-10.0_B_IDs-B013-B016_body_dyad.csv'
+
+# Read the CSV file into a dataframe
+df_raw <- read_csv(csv_path)
+
+
+# Display a summary of the loaded data
+cat(sprintf("Loaded data with %d rows and %d columns.\n", nrow(df_raw), ncol(df_raw)))
+glimpse(df_raw)
+```
+
+---
+
+# 3. Data Processing Pipeline Benchmarks
+
+This section benchmarks the core functions of the `duet` package in a typical sequential pipeline. We use `bench::mark()` to get detailed metrics on processing time and memory allocation for each step.
+
+## Benchmarking Individual Pipeline Steps
+
+We will measure the performance of the following key functions:
+1.  `op_interpolate()`
+2.  `op_compute_velocity()`
+3.  `op_compute_motionenergy()`
+4.  `op_compute_coherence()`
+
+```{r pipeline-benchmark}
+# Use bench::mark for a detailed and robust benchmark of the pipeline
+# We set check = FALSE because the output objects will be different
+pipeline_results <- bench::mark(
+  A_Interpolation = op_interpolate(df_raw, method = "linear", confidence_threshold = 0.3, handle_zeros = TRUE),
+  B_Velocity = op_compute_velocity(df_raw, fps = 30),
+  C_Motion_Energy = op_compute_motionenergy(op_compute_velocity(df_raw, fps = 30)),
+  D_Coherence = op_compute_coherence(op_compute_motionenergy(op_compute_velocity(df_raw, fps = 30)), plot = FALSE),
+  min_iterations = 5, # Run each step at least 5 times for stability
+  check = FALSE
+)
+
+# Print the results, selecting the most informative columns
+print(pipeline_results[, c("expression", "min", "median", "itr/sec", "mem_alloc", "n_gc")])
+
+# Visualize the benchmark results
+p_pipeline <- autoplot(pipeline_results) +
+  labs(
+    title = "Performance of Core Data Processing Functions",
+    subtitle = paste("Based on a real dataset with", nrow(df_raw), "rows"),
+    x = "Processing Step",
+    y = "Execution Time"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+print(p_pipeline)
+```
+
+## Profiling a Full Pipeline Run
+
+To understand where time is spent *within* a complete pipeline, we use `profvis`. This is excellent for identifying bottlenecks inside your functions.
+
+```{r profvis-pipeline, eval=FALSE}
+# Use profvis to visualize the time spent in each part of a full pipeline call
+# This chunk is set to eval=FALSE because profvis opens an interactive window.
+# Run this code directly in your R console to see the profile.
+library(profvis)
+
+profvis({
+  # Define a full processing pipeline
+  df_processed <- df_raw %>%
+    op_interpolate(method = "linear", confidence_threshold = 0.3) %>%
+    op_compute_velocity(fps = 30) %>%
+    op_compute_motionenergy() %>%
+    op_compute_coherence(plot = FALSE)
+  
+  # The result is not printed, we are only interested in the profiling
+  invisible(df_processed)
+})
+```
+
+---
+
+# 4. Memory Usage Analysis
+
+This section analyzes how memory usage changes as we apply each function in the pipeline, which adds new columns to our data frame.
+
+```{r memory-analysis}
+# Measure memory usage at each stage of the pipeline
+mem_results <- bench::mark(
+  Raw_Data = df_raw,
+  After_Interpolate = op_interpolate(df_raw),
+  After_Velocity = op_compute_velocity(df_raw),
+  After_Motion_Energy = op_compute_motionenergy(op_compute_velocity(df_raw)),
+  min_iterations = 5,
+  check = FALSE
+)
+
+# Extract memory allocation and object size
+memory_summary <- mem_results %>%
+  select(expression, mem_alloc, memory) %>%
+  mutate(
+    step = as.character(expression),
+    # `memory` column from bench gives total size of the returned object
+    object_size_mb = as.numeric(purrr::map(memory, ~as.numeric(.x$bytes) / 1024^2)),
+    # `mem_alloc` is the memory allocated during the operation
+    mem_alloc_mb = as.numeric(mem_alloc) / 1024^2
+  ) %>%
+  select(step, object_size_mb, mem_alloc_mb)
+
+kable(memory_summary, digits = 2, caption = "Memory Footprint at Each Pipeline Stage")
+
+# Visualize the increase in object size
+p_mem_growth <- ggplot(memory_summary, aes(x = factor(step, levels = step), y = object_size_mb)) +
+  geom_col(aes(fill = step), show.legend = FALSE, alpha = 0.8) +
+  geom_text(aes(label = paste(round(object_size_mb, 2), "MB")), vjust = -0.5) +
+  labs(
+    title = "Data Frame Size After Each Processing Step",
+    x = "Processing Stage",
+    y = "Total Object Size in Memory (MB)"
+  ) +
+  theme_minimal(base_size = 14)
+
+print(p_mem_growth)
+```
+
+---
+
+# 5. Performance Recommendations
+
+Based on the benchmarks run on real data, here are the key takeaways:
+
+```{r performance-summary}
+# Dynamically generate recommendations based on benchmark results
+# For demonstration, we'll use the pipeline_results dataframe
+recommendations <- pipeline_results %>%
+  mutate(
+    median_time_ms = as.numeric(median) * 1000,
+    Recommendation = case_when(
+      median_time_ms > 1000 ~ "High priority for optimization (e.g., C++, parallelization).",
+      median_time_ms > 100 ~ "Good candidate for vectorization or algorithmic improvements.",
+      TRUE ~ "Performance is acceptable; focus on other areas."
+    )
+  ) %>%
+  select(
+    Operation = expression,
+    `Median Time` = median,
+    `Memory Allocated` = mem_alloc,
+    Recommendation
+  )
+
+kable(recommendations, caption = "Performance Summary and Recommendations")
+```
+
+# 6. Session Information
+
+This section documents the R environment, ensuring the benchmarks are reproducible.
+
+```{r session-info}
+sessionInfo()
