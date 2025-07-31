@@ -1,4 +1,3 @@
-# Load the necessary library
 library(testthat)
 
 # Start of tests

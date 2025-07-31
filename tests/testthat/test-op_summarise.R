@@ -1,10 +1,4 @@
 library(testthat)
-library(tibble)
-library(dplyr)
-library(tidyr)
-
-# Mock the op_summarise function and its helpers for testing
-# (In practice, these would be loaded from your package)
 
 test_that("op_summarise handles basic functionality correctly", {
   # Create test data
