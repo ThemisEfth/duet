@@ -53,8 +53,8 @@ non-constant data points required for dominant period calculation. Default is 10
 }
 \value{
 A tibble with summary statistics. Each row corresponds to a unique
-combination of determined \code{grouping_vars} and values from \code{names_to}.
-Columns include grouping variables and requested metrics.
+  combination of determined \code{grouping_vars} and values from \code{names_to}.
+  Columns include grouping variables and requested metrics.
 }
 \description{
 This function takes time-series data (e.g., from OpenPose) in wide format,
@@ -66,12 +66,12 @@ plots of the calculated summary statistics.
 \details{
 The function performs the following steps:
 \enumerate{
-\item Validates input parameters.
-\item Determines grouping variables if not explicitly provided (checks for "person", "region").
-\item Identifies numeric columns to pivot, excluding non-numeric columns with a warning.
-\item Reshapes data from wide to long format using \code{\link[tidyr]{pivot_longer}}.
-\item Calculates requested summary statistics grouped by specified variables.
-\item Optionally generates visualization plots of the summary statistics.
+  \item Validates input parameters.
+  \item Determines grouping variables if not explicitly provided (checks for "person", "region").
+  \item Identifies numeric columns to pivot, excluding non-numeric columns with a warning.
+  \item Reshapes data from wide to long format using \code{\link[tidyr]{pivot_longer}}.
+  \item Calculates requested summary statistics grouped by specified variables.
+  \item Optionally generates visualization plots of the summary statistics.
 }
 
 For dominant period calculation, the function uses \code{\link[stats]{spectrum}}

@@ -27,27 +27,27 @@ op_interpolate(
 "nocb" (next observation carried backward), "mean", "median". Default is "median".}
 
 \item{confidence_threshold}{Numeric, NA, or FALSE. The confidence score below which
-data points are considered problematic and targeted for interpolation. If \code{NA}
-or \code{FALSE}, this check is skipped. Default is 0.3.}
+data points are considered problematic and targeted for interpolation. If `NA`
+or `FALSE`, this check is skipped. Default is 0.3.}
 
-\item{handle_missing}{Logical. If \code{TRUE} (default), \code{NA} values in coordinate
+\item{handle_missing}{Logical. If `TRUE` (default), `NA` values in coordinate
 columns will be targeted for interpolation.}
 
-\item{handle_zeros}{Logical. If \code{TRUE}, coordinate values of exactly 0 will be
-targeted for interpolation. Default is \code{FALSE}.}
+\item{handle_zeros}{Logical. If `TRUE`, coordinate values of exactly 0 will be
+targeted for interpolation. Default is `FALSE`.}
 
-\item{treat_na_conf_as_low}{Logical. If \code{TRUE} (default), \code{NA} values in a
+\item{treat_na_conf_as_low}{Logical. If `TRUE` (default), `NA` values in a
 confidence column are treated as having low confidence (i.e., 0).}
 
 \item{grouping_vars}{Character vector of column names to group the data by before
-interpolation (e.g., \code{c("person", "region")}). Interpolation is performed
+interpolation (e.g., `c("person", "region")`). Interpolation is performed
 independently for each group.}
 
 \item{polynomial_degree}{Integer. The degree of the polynomial to use when
-\code{method = "polynomial"}. Default is 3.}
+`method = "polynomial"`. Default is 3.}
 
 \item{max_gap}{Integer. The maximum number of consecutive problematic frames to
-interpolate. Gaps larger than this value will be ignored. Default is \code{Inf} (no limit).}
+interpolate. Gaps larger than this value will be ignored. Default is `Inf` (no limit).}
 
 \item{smooth_factor}{Numeric. A smoothing factor for spline interpolation (currently unused,
 for future compatibility). Default is 0.}
@@ -55,12 +55,12 @@ for future compatibility). Default is 0.}
 \item{extrapolation}{Character string specifying how to handle values outside the
 range of good data. Not yet fully implemented. Default is "none".}
 
-\item{verbose}{Logical. If \code{TRUE}, prints detailed messages about the process.}
+\item{verbose}{Logical. If `TRUE`, prints detailed messages about the process.}
 }
 \value{
-A data frame identical in structure to the input \code{data}, but with
-problematic values replaced by interpolated estimates. Two new columns are added:
-\code{interpolated_points_count_per_row} and \code{interpolation_method_used}.
+A data frame identical in structure to the input `data`, but with
+  problematic values replaced by interpolated estimates. Two new columns are added:
+  `interpolated_points_count_per_row` and `interpolation_method_used`.
 }
 \description{
 This function performs various interpolation methods for x and y coordinate columns
@@ -69,6 +69,6 @@ It groups the data by specified grouping variables and uses the selected
 interpolation method to estimate problematic values.
 
 The function is designed to be robust, automatically detecting the relevant
-OpenPose columns (e.g., \verb{x1, y1, c1}) and applying interpolation logic
+OpenPose columns (e.g., `x1, y1, c1`) and applying interpolation logic
 to each keypoint within each specified group (e.g., for each person).
 }

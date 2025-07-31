@@ -1,48 +1,45 @@
 Package: duet
-Title: Analysing Non-Verbal Communication in Dyadic Interactions from Video Data
-Version: 0.1.1.9000
+Type: Package
+Title: An R Package for Dyadic Movement Analysis
+Version: 0.2.0
 Authors@R: 
-    person("Themis", "Efthimiou", , "themiftw20@gmail.com", role = c("aut", "cre"),
+    person(given = "Themis Nikolas",
+           family = "Efthimiou",
+           role = c("aut", "cre"),
+           email = "themiftw20@gmail.com",
            comment = c(ORCID = "0000-0002-8458-5493"))
-Description: Analyzes non-verbal communication by processing data extracted 
-    from video recordings of dyadic interactions. It supports integration 
-    with open source tools, currently limited to 'OpenPose' (Cao et al. (2019) 
-    <doi:10.1109/TPAMI.2019.2929257>), converting its outputs into CSV format 
-    for further analysis. The package includes functions for data pre-processing, 
-    visualization, and computation of motion indices such as velocity, acceleration, 
-    and jerkiness (Cook et al. (2013) <doi:10.1093/brain/awt208>), facilitating 
-    the analysis of non-verbal cues in paired interactions and contributing to 
-    research on human communication dynamics.
+Description: A set of tools for analyzing dyadic movement data. It provides functions to process, visualize, and compute various movement-based metrics from OpenPose-generated keypoints, including velocity, acceleration, and jerkiness.
 License: MIT + file LICENSE
-SystemRequirements: FFmpeg (https://ffmpeg.org/)
+Encoding: UTF-8
+LazyData: true
+URL: https://github.com/ThemisEfth/duet
+BugReports: https://github.com/ThemisEfth/duet/issues
+Depends: R (>= 4.1.0)
 Imports: 
+    biwavelet,
+    imputeTS,
+    kza,
+    rjson,
+    moments,
     dplyr,
     ggplot2,
     ggthemes,
-    graphics,
-    grDevices,
-    kza,
-    parallel,
     patchwork,
     reshape2,
-    rjson,
     rlang,
     signal,
-    stats,
     stringr,
     tidyr,
     tidyselect,
-    tools,
-    utils,
-    zoo,
-    imputeTS,
-    moments,
-    biwavelet
-Suggests: 
+    zoo
+Suggests:
+    cowplot,
+    flextable,
+    magick,
+    rempsyc,
+    knitr,
+    rmarkdown,
     spelling,
     testthat (>= 3.0.0)
-Config/testthat/edition: 3
-Encoding: UTF-8
-Language: en-US
-Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
+VignetteBuilder: knitr

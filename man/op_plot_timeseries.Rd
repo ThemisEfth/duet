@@ -29,14 +29,14 @@ same keypoint ID should be overlaid in the same plot facet.
 Default is FALSE.}
 
 \item{person}{Character string specifying which person to plot. Options: "left", "right", or "both".
-Requires a 'person' column in \code{data}. Default is "both".}
+Requires a 'person' column in `data`. Default is "both".}
 
-\item{facet_by_person}{Boolean indicating if data for different persons (when \code{person = "both"})
-should be in separate facets (\code{TRUE}, default) or overlaid on the same
-facets (\code{FALSE}).}
+\item{facet_by_person}{Boolean indicating if data for different persons (when `person = "both"`)
+should be in separate facets (`TRUE`, default) or overlaid on the same
+facets (`FALSE`).}
 
 \item{max_facets}{Integer indicating the maximum number of facets allowed (default is 10).
-If the total facets exceed this number, the function returns \code{NULL} with a warning.}
+If the total facets exceed this number, the function returns `NULL` with a warning.}
 
 \item{x_axis}{Character string for the column to be used as the x-axis (time). Default is "frame".}
 
@@ -61,15 +61,16 @@ sample_data <- data.frame(
   person = rep(c("P1", "P2"), each = 50)
 )
 
+\dontrun{
 # Ex 1: Overlay axes, facet by person.
 # Color by metric_type, linetype by metric_type.
-# op_plot_timeseries(data = sample_data, overlay_axes = TRUE, person = "both",
-#                    facet_by_person = TRUE)
+op_plot_timeseries(data = sample_data, overlay_axes = TRUE, person = "both",
+                   facet_by_person = TRUE)
 
 # Ex 2: Overlay axes, overlay persons.
 # Color by person, linetype by person.
-# (metric_types x,y,v for a keypoint will be same color/linetype for a person)
-# op_plot_timeseries(data = sample_data, overlay_axes = TRUE, person = "both",
-#                    facet_by_person = FALSE)
+op_plot_timeseries(data = sample_data, overlay_axes = TRUE, person = "both",
+                   facet_by_person = FALSE)
+}
 
 }

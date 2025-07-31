@@ -34,10 +34,10 @@ Options: "none" (default - no change),
 "set_na" (sets the first and last calculated velocities to NA).}
 }
 \value{
-A data frame with velocity columns. If \code{boundary_velocity_treatment = "set_na"},
-the first and last rows of the velocity columns will have NA values.
-The overall data frame will have one less row than the input due to the
-removal of the initial NA velocity row.
+A data frame with velocity columns. If `boundary_velocity_treatment = "set_na"`,
+        the first and last rows of the velocity columns will have NA values.
+        The overall data frame will have one less row than the input due to the
+        removal of the initial NA velocity row.
 }
 \description{
 This function calculates the velocity for each column that begins with 'x' and 'y'.

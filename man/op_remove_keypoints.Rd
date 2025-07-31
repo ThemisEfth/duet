@@ -18,7 +18,7 @@ op_remove_keypoints(
 x, y, and c (confidence) columns with corresponding indices.}
 
 \item{remove_specific_keypoints}{Character vector. Specifies the keypoint indices (e.g., "1") to remove.
-This will automatically remove corresponding \code{x}, \code{y}, and \code{c} columns for those indices. Default is NULL.}
+This will automatically remove corresponding `x`, `y`, and `c` columns for those indices. Default is NULL.}
 
 \item{remove_undetected_keypoints}{Logical. If TRUE, removes keypoints where all confidence values are zero across all rows. Default is FALSE.}
 
@@ -29,7 +29,7 @@ Keypoints with a mean confidence below this threshold will be removed. If set to
 of missing or zero values. Columns exceeding this threshold will be removed. If set to FALSE, behaves as NULL. Default is NULL.}
 
 \item{apply_removal_equally}{Logical. If TRUE, the same columns will be removed across all rows of the dataset.
-If FALSE, removal criteria are applied separately for each combination of \code{person} and \code{region}. Default is TRUE.}
+If FALSE, removal criteria are applied separately for each combination of `person` and `region`. Default is TRUE.}
 }
 \value{
 A data frame with specified keypoints and corresponding columns removed.

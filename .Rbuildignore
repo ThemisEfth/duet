@@ -1,7 +1,9 @@
-^Duet\.Rproj$
-^\.Rproj\.user$
+^.*\.Rproj$
 ^LICENSE\.md$
-^dev$
-^revdep$
+^NAMESPACE\.r$
 ^cran-comments\.md$
+^demo$
+^dev$
+^duet_hex\.jpeg$
+^figures$
 ^\.github$

@@ -30,6 +30,7 @@
 #' @importFrom stats as.formula na.omit
 #' @importFrom rlang sym .data
 #' @importFrom tidyselect all_of
+#' @importFrom utils head
 #'
 #' @examples
 #' # Create sample data
@@ -42,24 +43,33 @@
 #'   person = rep(c("P1", "P2"), each = 50)
 #' )
 #'
+#' \dontrun{
 #' # Ex 1: Overlay axes, facet by person.
 #' # Color by metric_type, linetype by metric_type.
-#' # op_plot_timeseries(data = sample_data, overlay_axes = TRUE, person = "both",
-#' #                    facet_by_person = TRUE)
+#' op_plot_timeseries(data = sample_data, overlay_axes = TRUE, person = "both",
+#'                    facet_by_person = TRUE)
 #'
 #' # Ex 2: Overlay axes, overlay persons.
 #' # Color by person, linetype by person.
-#' # (metric_types x,y,v for a keypoint will be same color/linetype for a person)
-#' # op_plot_timeseries(data = sample_data, overlay_axes = TRUE, person = "both",
-#' #                    facet_by_person = FALSE)
+#' op_plot_timeseries(data = sample_data, overlay_axes = TRUE, person = "both",
+#'                    facet_by_person = FALSE)
+#' }
 #'
-op_plot_timeseries <- function(data, keypoints = NULL, free_y = TRUE,
-                               overlay_axes = FALSE, person = "both",
-                               facet_by_person = TRUE,
-                               max_facets = 10, x_axis = "frame", verbose = FALSE) {
-
+op_plot_timeseries <- function(
+  data,
+  keypoints = NULL,
+  free_y = TRUE,
+  overlay_axes = FALSE,
+  person = "both",
+  facet_by_person = TRUE,
+  max_facets = 10,
+  x_axis = "frame",
+  verbose = FALSE
+) {
   # --- 1. Input Validation and Data Preparation ---
-  if (!is.data.frame(data)) stop("Input 'data' must be a data frame.")
+  if (!is.data.frame(data)) {
+    stop("Input 'data' must be a data frame.")
+  }
   if (nrow(data) == 0) {
     warning("Input 'data' is empty. Returning NULL.")
     return(NULL)
@@ -69,7 +79,9 @@ op_plot_timeseries <- function(data, keypoints = NULL, free_y = TRUE,
   }
 
   if (!person %in% c("left", "right", "both")) {
-    stop("Invalid value for 'person'. Allowed values are 'left', 'right', or 'both'.")
+    stop(
+      "Invalid value for 'person'. Allowed values are 'left', 'right', or 'both'."
+    )
   }
 
   has_person_col <- "person" %in% names(data)
@@ -79,42 +91,69 @@ op_plot_timeseries <- function(data, keypoints = NULL, free_y = TRUE,
     if (has_person_col) {
       person_data_filtered <- data[data$person == person, ]
       if (nrow(person_data_filtered) == 0) {
-        warning(paste("No data remains after filtering for person =", person, ". Returning NULL."))
+        warning(paste(
+          "No data remains after filtering for person =",
+          person,
+          ". Returning NULL."
+        ))
         return(NULL)
       }
     } else {
-      warning(paste0("'person' column not found. Cannot filter by person '", person,
-                     "'. Proceeding with all data, person interactions will be disabled."))
+      warning(paste0(
+        "'person' column not found. Cannot filter by person '",
+        person,
+        "'. Proceeding with all data, person interactions will be disabled."
+      ))
     }
   }
 
-  person_facet_active <- person == "both" && has_person_col &&
+  person_facet_active <- person == "both" &&
+    has_person_col &&
     length(unique(na.omit(person_data_filtered$person))) > 1 &&
     facet_by_person
 
-  person_overlay_active <- person == "both" && has_person_col &&
+  person_overlay_active <- person == "both" &&
+    has_person_col &&
     length(unique(na.omit(person_data_filtered$person))) > 1 &&
     !facet_by_person
 
   # --- 2. Identify Plottable Columns and Keypoint IDs ---
   plottable_col_prefixes <- c("x", "y", "v_", "a_", "j_")
-  plottable_cols_pattern <- paste0("^(", paste(plottable_col_prefixes, collapse="|"), ")")
-  plottable_cols <- names(person_data_filtered)[grepl(plottable_cols_pattern, names(person_data_filtered))]
+  plottable_cols_pattern <- paste0(
+    "^(",
+    paste(plottable_col_prefixes, collapse = "|"),
+    ")"
+  )
+  plottable_cols <- names(person_data_filtered)[grepl(
+    plottable_cols_pattern,
+    names(person_data_filtered)
+  )]
 
   if (length(plottable_cols) == 0) {
-    stop(paste0("No plottable columns (starting with ",
-                paste(plottable_col_prefixes, collapse=", "), ") found."))
+    stop(paste0(
+      "No plottable columns (starting with ",
+      paste(plottable_col_prefixes, collapse = ", "),
+      ") found."
+    ))
   }
 
-  keypoint_ids_from_cols <- unique(sub(plottable_cols_pattern, "", plottable_cols))
+  keypoint_ids_from_cols <- unique(sub(
+    plottable_cols_pattern,
+    "",
+    plottable_cols
+  ))
   keypoint_ids_from_cols <- sort(keypoint_ids_from_cols)
 
   if (is.null(keypoints)) {
     if (length(keypoint_ids_from_cols) > 0) {
       keypoints <- head(keypoint_ids_from_cols, 4)
       if (verbose) {
-        message(paste("No keypoints specified, defaulting to first", length(keypoints),
-                      "available:", paste(keypoints, collapse=", ")))
+        message(paste(
+          "No keypoints specified, defaulting to first",
+          length(keypoints),
+          "available:",
+          paste(keypoints, collapse = ", ")
+        ))
       }
     } else {
       stop("No keypoints could be automatically determined from column names.")
@@ -138,26 +177,39 @@ op_plot_timeseries <- function(data, keypoints = NULL, free_y = TRUE,
   cols_to_pivot_for_df <- unique(cols_to_pivot_for_df)
 
   if (length(cols_to_pivot_for_df) == 0) {
-    warning("No data columns found for the specified keypoints. Returning NULL.")
+    warning(
+      "No data columns found for the specified keypoints. Returning NULL."
+    )
     return(NULL)
   }
 
   cols_for_pivot_df_subset <- c(x_axis, cols_to_pivot_for_df)
-  if (has_person_col) cols_for_pivot_df_subset <- c(cols_for_pivot_df_subset, "person")
+  if (has_person_col) {
+    cols_for_pivot_df_subset <- c(cols_for_pivot_df_subset, "person")
+  }
 
-  pivot_data_subset_for_df <- person_data_filtered[, intersect(cols_for_pivot_df_subset, names(person_data_filtered)), drop = FALSE]
+  pivot_data_subset_for_df <- person_data_filtered[,
+    intersect(cols_for_pivot_df_subset, names(person_data_filtered)),
+    drop = FALSE
+  ]
 
   df_long <- pivot_longer(
     pivot_data_subset_for_df,
     cols = all_of(cols_to_pivot_for_df),
     names_to = c("metric_type", "keypoint_id"),
-    names_pattern = paste0("^(", paste(plottable_col_prefixes, collapse="|"), ")(.*)"),
+    names_pattern = paste0(
+      "^(",
+      paste(plottable_col_prefixes, collapse = "|"),
+      ")(.*)"
+    ),
     values_to = "values"
   )
   df_long <- df_long[df_long$keypoint_id %in% keypoints, ]
 
   if (is.null(df_long) || nrow(df_long) == 0) {
-    warning("No data available for plotting after reshaping and filtering. Returning NULL.")
+    warning(
+      "No data available for plotting after reshaping and filtering. Returning NULL."
+    )
     return(NULL)
   }
 
@@ -177,17 +229,24 @@ op_plot_timeseries <- function(data, keypoints = NULL, free_y = TRUE,
   }
 
   facet_vars_for_calc <- intersect(facet_vars_for_calc, names(df_long))
-  if(length(facet_vars_for_calc) == 0 && nrow(df_long) > 0) {
-    warning("No valid facet variables identified. Defaulting to 1 facet for calculation.")
+  if (length(facet_vars_for_calc) == 0 && nrow(df_long) > 0) {
+    warning(
+      "No valid facet variables identified. Defaulting to 1 facet for calculation."
+    )
     total_facets_to_plot <- 1
   } else if (length(facet_vars_for_calc) > 0) {
-    total_facets_to_plot <- nrow(unique(df_long[, facet_vars_for_calc, drop = FALSE]))
+    total_facets_to_plot <- nrow(unique(df_long[,
+      facet_vars_for_calc,
+      drop = FALSE
+    ]))
   } else {
     total_facets_to_plot <- 0
   }
 
   if (total_facets_to_plot == 0 && nrow(df_long) > 0) {
-    warning("Calculated 0 facets but data exists. Plotting may be incorrect. Defaulting to 1 facet for calculation.")
+    warning(
+      "Calculated 0 facets but data exists. Plotting may be incorrect. Defaulting to 1 facet for calculation."
+    )
     total_facets_to_plot <- 1
   } else if (total_facets_to_plot == 0 && nrow(df_long) == 0) {
     warning("No data to plot, 0 facets. Returning NULL.")
@@ -197,14 +256,17 @@ op_plot_timeseries <- function(data, keypoints = NULL, free_y = TRUE,
   if (total_facets_to_plot > max_facets) {
     warning(sprintf(
       "Too many facets (%d) to plot (max_facets = %d). Please adjust parameters or increase max_facets. Returning NULL.",
-      total_facets_to_plot, max_facets
+      total_facets_to_plot,
+      max_facets
     ))
     return(NULL)
   }
 
   # --- 5. Construct Plot ---
   facet_formula_str <- paste("~", paste(facet_vars_for_calc, collapse = " + "))
-  if (length(facet_vars_for_calc) == 0) facet_formula_str <- "~ ."
+  if (length(facet_vars_for_calc) == 0) {
+    facet_formula_str <- "~ ."
+  }
 
   base_aes <- aes(x = .data[[x_axis]], y = .data$values)
   active_legends <- list()
@@ -232,13 +294,15 @@ op_plot_timeseries <- function(data, keypoints = NULL, free_y = TRUE,
 
   p <- ggplot(df_long, base_aes) +
     geom_line(alpha = 0.8) +
-    facet_wrap(as.formula(facet_formula_str),
-               scales = ifelse(free_y, "free_y", "fixed")) +
+    facet_wrap(
+      as.formula(facet_formula_str),
+      scales = ifelse(free_y, "free_y", "fixed")
+    ) +
     theme_classic(base_size = 12) +
     labs(x = gsub("_", " ", x_axis), y = "Value") # Removed Hmisc::capitalize
 
   # Apply legend titles from active_legends
-  if(length(active_legends) > 0) {
+  if (length(active_legends) > 0) {
     p <- p + labs(!!!active_legends)
   }
 
@@ -247,14 +311,21 @@ op_plot_timeseries <- function(data, keypoints = NULL, free_y = TRUE,
     mapped_linetype_col <- NULL
     if (active_legends$linetype == "Person" && "person" %in% names(df_long)) {
       mapped_linetype_col <- df_long$person
-    } else if (active_legends$linetype == "Metric Type" && "metric_type" %in% names(df_long)) {
+    } else if (
+      active_legends$linetype == "Metric Type" &&
+        "metric_type" %in% names(df_long)
+    ) {
       mapped_linetype_col <- df_long$metric_type
     }
 
     if (!is.null(mapped_linetype_col)) {
       num_levels <- length(levels(as.factor(mapped_linetype_col)))
       if (num_levels > 0) {
-        p <- p + scale_linetype_manual(name = active_legends$linetype, values = 1:num_levels)
+        p <- p +
+          scale_linetype_manual(
+            name = active_legends$linetype,
+            values = 1:num_levels
+          )
       }
     }
   }
@@ -267,10 +338,14 @@ op_plot_timeseries <- function(data, keypoints = NULL, free_y = TRUE,
   }
 
   title_str <- "Time Series of Keypoint Data"
-  if(length(keypoints) <= 3) {
-    title_str <- paste0(title_str, " for Keypoint(s): ", paste(keypoints, collapse=", "))
+  if (length(keypoints) <= 3) {
+    title_str <- paste0(
+      title_str,
+      " for Keypoint(s): ",
+      paste(keypoints, collapse = ", ")
+    )
   }
-  if(person != "both" && has_person_col){
+  if (person != "both" && has_person_col) {
     title_str <- paste0(title_str, " (Person: ", person, ")")
   } else if (person_facet_active) {
     title_str <- paste0(title_str, " (Faceted by Person)")

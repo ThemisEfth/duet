@@ -29,14 +29,14 @@ op_compute_coherence(
 \arguments{
 \item{data}{A data frame containing motion energy data.}
 
-\item{dyad_id}{Character string for the dyad to analyze. If \code{NULL} (default),
-the function will proceed only if a single dyad is present in \code{data}.}
+\item{dyad_id}{Character string for the dyad to analyze. If `NULL` (default),
+the function will proceed only if a single dyad is present in `data`.}
 
-\item{region}{Character string for the body region to analyze. If \code{NULL}
+\item{region}{Character string for the body region to analyze. If `NULL`
 (default), proceeds only if a single region exists for the selected dyad.}
 
 \item{person_ids}{A vector of two character strings for the persons in the
-dyad. If \code{NULL} (default), auto-detects the two persons.}
+dyad. If `NULL` (default), auto-detects the two persons.}
 
 \item{dyad_col}{Character string for the dyad identifier column. Defaults to
 "base_filename" or "dyad_id" if found.}
@@ -49,31 +49,31 @@ dyad. If \code{NULL} (default), auto-detects the two persons.}
 
 \item{motion_col}{Character string for the motion energy column name (default: "motion_energy").}
 
-\item{freq_bands}{A named list of frequency bands in \strong{Hertz (Hz)}. Each
+\item{freq_bands}{A named list of frequency bands in **Hertz (Hz)**. Each
 element is a numeric vector of length two specifying the lower and upper
-frequency bound (e.g., \code{list("slow_rhythm" = c(0.1, 0.5))}).}
+frequency bound (e.g., `list("slow_rhythm" = c(0.1, 0.5))`).}
 
 \item{start_frame}{Integer, the starting frame for analysis (default: 1).}
 
-\item{end_frame}{Integer, the ending frame for analysis. If \code{NULL} (default),
+\item{end_frame}{Integer, the ending frame for analysis. If `NULL` (default),
 uses all available frames.}
 
-\item{param}{Numeric, the mother wavelet parameter for \code{biwavelet::wtc} (default: 8).}
+\item{param}{Numeric, the mother wavelet parameter for `biwavelet::wtc` (default: 8).}
 
 \item{nrands}{Integer, the number of random simulations for significance
 testing (default: 1000).}
 
-\item{plot_result}{Logical, if \code{TRUE}, generates a plot of the wavelet coherence.}
+\item{plot_result}{Logical, if `TRUE`, generates a plot of the wavelet coherence.}
 
-\item{return_raw}{Logical, if \code{TRUE}, includes the raw \code{wtc} object in the output.}
+\item{return_raw}{Logical, if `TRUE`, includes the raw `wtc` object in the output.}
 
-\item{verbose}{Logical, if \code{TRUE}, prints informative messages during execution.}
+\item{verbose}{Logical, if `TRUE`, prints informative messages during execution.}
 }
 \value{
 A list containing:
-\item{coherence_summary}{A data frame with \code{dyad_id} and coherence statistics for each frequency band.}
+\item{coherence_summary}{A data frame with `dyad_id` and coherence statistics for each frequency band.}
 \item{analysis_info}{A list with metadata about the analysis.}
-\item{wtc_object}{If \code{return_raw = TRUE}, the raw object from \code{biwavelet::wtc}.}
+\item{wtc_object}{If `return_raw = TRUE`, the raw object from `biwavelet::wtc`.}
 }
 \description{
 This function computes cross-wavelet coherence between two individuals in a dyad
@@ -82,10 +82,10 @@ user-friendly, with automatic detection of parameters and dynamic calculation
 of frequency bands.
 }
 \details{
-This function is a wrapper around \code{biwavelet::wtc} that simplifies its
+This function is a wrapper around `biwavelet::wtc` that simplifies its
 application to dyadic motion data. It includes CRAN-compliant safety checks,
-such as replacing \code{cat()} with \code{message()} and safely managing graphical
-parameters with \code{on.exit()}.
+such as replacing `cat()` with `message()` and safely managing graphical
+parameters with `on.exit()`.
 
 The key improvement is the dynamic calculation of frequency bands. You specify
 bands in Hz, and the function identifies the corresponding indices from the

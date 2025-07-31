@@ -45,42 +45,55 @@
 #' @importFrom zoo na.locf
 #' @importFrom imputeTS na_kalman
 #' @export
-op_interpolate <- function(data,
-                           method = "median",
-                           confidence_threshold = 0.3,
-                           handle_missing = TRUE,
-                           handle_zeros = FALSE,
-                           treat_na_conf_as_low = TRUE,
-                           grouping_vars = c("person", "region"),
-                           polynomial_degree = 3,
-                           max_gap = Inf,
-                           smooth_factor = 0,
-                           extrapolation = "none",
-                           verbose = FALSE) {
-
+op_interpolate <- function(
+  data,
+  method = "median",
+  confidence_threshold = 0.3,
+  handle_missing = TRUE,
+  handle_zeros = FALSE,
+  treat_na_conf_as_low = TRUE,
+  grouping_vars = c("person", "region"),
+  polynomial_degree = 3,
+  max_gap = Inf,
+  smooth_factor = 0,
+  extrapolation = "none",
+  verbose = FALSE
+) {
   # --- Input Validation ---
-  if (!is.data.frame(data)) stop("Input 'data' must be a data frame.")
+  if (!is.data.frame(data)) {
+    stop("Input 'data' must be a data frame.")
+  }
   if (nrow(data) == 0) {
-    if (verbose) warning("Input data is empty, returning as is.")
+    if (verbose) {
+      warning("Input data is empty, returning as is.")
+    }
     return(data)
   }
   # (Add other validation checks for parameters here if desired)
 
   keypoint_info <- .detect_keypoint_cols(data)
   if (length(keypoint_info$x_cols) == 0) {
-    if (verbose) warning("No OpenPose keypoint columns detected. Returning data as is.")
+    if (verbose) {
+      warning("No OpenPose keypoint columns detected. Returning data as is.")
+    }
     return(data)
   }
 
   if (verbose) {
-    cat(sprintf("Detected %d keypoints. Method: '%s'. Confidence Threshold: %s.\n",
-                length(keypoint_info$keypoint_ids), method, as.character(confidence_threshold)))
+    cat(sprintf(
+      "Detected %d keypoints. Method: '%s'. Confidence Threshold: %s.\n",
+      length(keypoint_info$keypoint_ids),
+      method,
+      as.character(confidence_threshold)
+    ))
   }
 
   # Determine actual grouping variables present in the data
   actual_grouping_vars <- grouping_vars[grouping_vars %in% names(data)]
   if (length(actual_grouping_vars) == 0 && verbose) {
-    cat("No valid grouping variables found. Processing data as a single group.\n")
+    cat(
+      "No valid grouping variables found. Processing data as a single group.\n"
+    )
   }
 
   # Use dplyr's group_by() and do() for robust grouped operations.
@@ -107,8 +120,13 @@ op_interpolate <- function(data,
   processed_data$interpolation_method_used <- method
 
   if (verbose) {
-    total_rows_changed <- sum(processed_data$interpolated_points_count_per_row > 0)
-    cat(sprintf("Finished interpolation. Total rows with at least one interpolated value: %d\n", total_rows_changed))
+    total_rows_changed <- sum(
+      processed_data$interpolated_points_count_per_row > 0
+    )
+    cat(sprintf(
+      "Finished interpolation. Total rows with at least one interpolated value: %d\n",
+      total_rows_changed
+    ))
   }
 
   return(processed_data)
@@ -119,9 +137,19 @@ op_interpolate <- function(data,
 
 #' Process a single group of data for interpolation
 #' @noRd
-.interpolate_group <- function(group_df, keypoint_info, method, confidence_threshold,
-                               handle_missing, handle_zeros, treat_na_conf_as_low,
-                               max_gap, polynomial_degree, extrapolation, verbose) {
+.interpolate_group <- function(
+  group_df,
+  keypoint_info,
+  method,
+  confidence_threshold,
+  handle_missing,
+  handle_zeros,
+  treat_na_conf_as_low,
+  max_gap,
+  polynomial_degree,
+  extrapolation,
+  verbose
+) {
   # Add a counter column for this group
   group_df$interpolated_points_count_per_row <- 0
 
@@ -140,18 +168,35 @@ op_interpolate <- function(data,
     }
 
     problematic_indices <- .identify_problematic_indices(
-      x_vals, y_vals, conf_vals, confidence_threshold, handle_missing, handle_zeros
+      x_vals,
+      y_vals,
+      conf_vals,
+      confidence_threshold,
+      handle_missing,
+      handle_zeros
     )
 
-    if (length(problematic_indices) == 0) next
+    if (length(problematic_indices) == 0) {
+      next
+    }
 
-    indices_to_interpolate <- .filter_indices_by_gap(problematic_indices, max_gap)
+    indices_to_interpolate <- .filter_indices_by_gap(
+      problematic_indices,
+      max_gap
+    )
 
-    if (length(indices_to_interpolate) == 0) next
+    if (length(indices_to_interpolate) == 0) {
+      next
+    }
 
     interpolation_result <- .interpolate_xy_series(
-      x_vals, y_vals, indices_to_interpolate, method,
-      polynomial_degree, extrapolation, verbose
+      x_vals,
+      y_vals,
+      indices_to_interpolate,
+      method,
+      polynomial_degree,
+      extrapolation,
+      verbose
     )
 
     if (!is.null(interpolation_result)) {
@@ -160,8 +205,13 @@ op_interpolate <- function(data,
       group_df[[y_col]][interpolation_result$indices] <- interpolation_result$y
 
       # Increment the counter for each row that was changed
-      group_df$interpolated_points_count_per_row[interpolation_result$indices] <-
-        group_df$interpolated_points_count_per_row[interpolation_result$indices] + 1
+      group_df$interpolated_points_count_per_row[
+        interpolation_result$indices
+      ] <-
+        group_df$interpolated_points_count_per_row[
+          interpolation_result$indices
+        ] +
+        1
     }
   }
   return(group_df)
@@ -188,18 +238,38 @@ op_interpolate <- function(data,
   col_names <- names(data)
   x_cols <- sort(grep("^x\\d+$", col_names, value = TRUE))
   y_cols <- sort(grep("^y\\d+$", col_names, value = TRUE))
-  conf_cols <- sort(grep("^(c|conf)\\d+$", col_names, value = TRUE, ignore.case = TRUE))
+  conf_cols <- sort(grep(
+    "^(c|conf)\\d+$",
+    col_names,
+    value = TRUE,
+    ignore.case = TRUE
+  ))
 
   if (length(x_cols) == 0 || length(y_cols) == 0 || length(conf_cols) == 0) {
-    return(list(x_cols = character(0), y_cols = character(0), conf_cols = character(0), keypoint_ids = character(0)))
+    return(list(
+      x_cols = character(0),
+      y_cols = character(0),
+      conf_cols = character(0),
+      keypoint_ids = character(0)
+    ))
   }
 
-  get_id <- function(col_name) sub("^(x|y|c|conf)", "", col_name, ignore.case = TRUE)
-  common_ids <- Reduce(intersect, list(get_id(x_cols), get_id(y_cols), get_id(conf_cols)))
+  get_id <- function(col_name) {
+    sub("^(x|y|c|conf)", "", col_name, ignore.case = TRUE)
+  }
+  common_ids <- Reduce(
+    intersect,
+    list(get_id(x_cols), get_id(y_cols), get_id(conf_cols))
+  )
   common_ids <- sort(unique(common_ids))
 
   if (length(common_ids) == 0) {
-    return(list(x_cols = character(0), y_cols = character(0), conf_cols = character(0), keypoint_ids = character(0)))
+    return(list(
+      x_cols = character(0),
+      y_cols = character(0),
+      conf_cols = character(0),
+      keypoint_ids = character(0)
+    ))
   }
 
   first_conf_col <- conf_cols[get_id(conf_cols) %in% common_ids][1]
@@ -215,7 +285,14 @@ op_interpolate <- function(data,
 
 #' Identify indices of problematic data points
 #' @noRd
-.identify_problematic_indices <- function(x_vals, y_vals, conf_vals, threshold, handle_na, handle_0) {
+.identify_problematic_indices <- function(
+  x_vals,
+  y_vals,
+  conf_vals,
+  threshold,
+  handle_na,
+  handle_0
+) {
   # Start with a vector of all FALSE
   is_problematic <- logical(length(x_vals))
   if (handle_na) {
@@ -223,7 +300,8 @@ op_interpolate <- function(data,
   }
   if (handle_0) {
     # Only flag non-NA zeros
-    is_problematic <- is_problematic | ((!is.na(x_vals) & x_vals == 0) | (!is.na(y_vals) & y_vals == 0))
+    is_problematic <- is_problematic |
+      ((!is.na(x_vals) & x_vals == 0) | (!is.na(y_vals) & y_vals == 0))
   }
   if (is.numeric(threshold) && !is.na(threshold)) {
     # Flag points where confidence is below threshold (treat NA confidence as 0)
@@ -239,7 +317,10 @@ op_interpolate <- function(data,
     return(problematic_indices)
   }
   # Split indices into groups of consecutive numbers
-  gaps <- split(problematic_indices, cumsum(c(1, diff(problematic_indices) != 1)))
+  gaps <- split(
+    problematic_indices,
+    cumsum(c(1, diff(problematic_indices) != 1))
+  )
   # Keep only the gaps that are not too long
   indices_to_keep <- unlist(gaps[sapply(gaps, length) <= max_gap])
   return(indices_to_keep)
@@ -247,10 +328,40 @@ op_interpolate <- function(data,
 
 #' Perform the mathematical interpolation for a single x/y series
 #' @noRd
-.interpolate_xy_series <- function(x_vals, y_vals, indices_to_interp, method, poly_deg, extrap, verbose) {
+.interpolate_xy_series <- function(
+  x_vals,
+  y_vals,
+  indices_to_interp,
+  method,
+  poly_deg,
+  extrap,
+  verbose
+) {
+  # --- Method Validation ---
+  valid_methods <- c(
+    "spline",
+    "linear",
+    "polynomial",
+    "kalman",
+    "locf",
+    "nocb",
+    "mean",
+    "median"
+  )
+  if (!method %in% valid_methods) {
+    if (verbose) {
+      warning(sprintf(
+        "Invalid interpolation method '%s' provided. Skipping interpolation for this keypoint.",
+        method
+      ))
+    }
+    return(NULL)
+  }
   n_pts <- length(x_vals)
   fit_indices <- setdiff(1:n_pts, indices_to_interp)
-  fit_indices <- fit_indices[!is.na(x_vals[fit_indices]) & !is.na(y_vals[fit_indices])]
+  fit_indices <- fit_indices[
+    !is.na(x_vals[fit_indices]) & !is.na(y_vals[fit_indices])
+  ]
 
   min_pts_needed <- switch(method, "spline" = 2, "polynomial" = poly_deg + 1, 1)
   if (length(fit_indices) < min_pts_needed) {
@@ -259,28 +370,59 @@ op_interpolate <- function(data,
 
   # Helper function to run the interpolation logic for one vector (x or y)
   run_interp <- function(values, fit_idx, interp_idx) {
-    series_na <- values; series_na[interp_idx] <- NA
-    switch(method,
-           "spline" = stats::spline(fit_idx, values[fit_idx], xout = interp_idx, method = "fmm")$y,
-           "linear" = stats::approx(fit_idx, values[fit_idx], xout = interp_idx, rule = 2)$y,
-           "polynomial" = {
-             model <- stats::lm(val ~ poly(idx, degree = min(poly_deg, length(fit_idx) - 1)), data.frame(val = values[fit_idx], idx = fit_idx))
-             stats::predict(model, newdata = data.frame(idx = interp_idx))
-           },
-           "kalman" = as.numeric(imputeTS::na_kalman(stats::ts(series_na)))[interp_idx],
-           "locf" = zoo::na.locf(series_na, na.rm = FALSE)[interp_idx],
-           "nocb" = zoo::na.locf(series_na, na.rm = FALSE, fromLast = TRUE)[interp_idx],
-           "mean" = rep(mean(values[fit_idx], na.rm = TRUE), length(interp_idx)),
-           "median" = rep(stats::median(values[fit_idx], na.rm = TRUE), length(interp_idx))
+    series_na <- values
+    series_na[interp_idx] <- NA
+    switch(
+      method,
+      "spline" = stats::spline(
+        fit_idx,
+        values[fit_idx],
+        xout = interp_idx,
+        method = "fmm"
+      )$y,
+      "linear" = stats::approx(
+        fit_idx,
+        values[fit_idx],
+        xout = interp_idx,
+        rule = 2
+      )$y,
+      "polynomial" = {
+        model <- stats::lm(
+          val ~ poly(idx, degree = min(poly_deg, length(fit_idx) - 1)),
+          data.frame(val = values[fit_idx], idx = fit_idx)
+        )
+        stats::predict(model, newdata = data.frame(idx = interp_idx))
+      },
+      "kalman" = as.numeric(imputeTS::na_kalman(stats::ts(series_na)))[
+        interp_idx
+      ],
+      "locf" = zoo::na.locf(series_na, na.rm = FALSE)[interp_idx],
+      "nocb" = zoo::na.locf(series_na, na.rm = FALSE, fromLast = TRUE)[
+        interp_idx
+      ],
+      "mean" = rep(mean(values[fit_idx], na.rm = TRUE), length(interp_idx)),
+      "median" = rep(
+        stats::median(values[fit_idx], na.rm = TRUE),
+        length(interp_idx)
+      )
     )
   }
 
-  tryCatch({
-    interpolated_x <- run_interp(x_vals, fit_indices, indices_to_interp)
-    interpolated_y <- run_interp(y_vals, fit_indices, indices_to_interp)
-    return(list(x = interpolated_x, y = interpolated_y, indices = indices_to_interp))
-  }, error = function(e) {
-    if (verbose) cat(sprintf("  Error during interpolation: %s. Skipping.\n", e$message))
-    return(NULL)
-  })
+  tryCatch(
+    {
+      interpolated_x <- run_interp(x_vals, fit_indices, indices_to_interp)
+      interpolated_y <- run_interp(y_vals, fit_indices, indices_to_interp)
+      return(list(
+        x = interpolated_x,
+        y = interpolated_y,
+        indices = indices_to_interp
+      ))
+    },
+    error = function(e) {
+      if (verbose) {
+        cat(sprintf("  Error during interpolation: %s. Skipping.\n", e$message))
+      }
+      return(NULL)
+    }
+  )
 }

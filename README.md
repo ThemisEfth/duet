@@ -157,8 +157,6 @@ See the `demo/` folder for example data and a demonstration script.
 
 If you’d like to contribute, please open an issue or submit a pull request on the [GitHub repository](https://github.com/ThemisEfth/duet).
 
-If you’d like to contribute, please open an issue or submit a pull request on the [GitHub repository](https://github.com/ThemisEfth/duet).
-
 ## Acknowledgements
 
 This package was developed to facilitate dyadic movement analysis using OpenPose-generated keypoints. If you use `duet` in your research, please consider citing the repository.

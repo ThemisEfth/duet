@@ -36,13 +36,13 @@ Default: TRUE}
 
 \item{method}{Character. Method for calculating differences:
 \itemize{
-\item{"absolute"}: Calculates the sum of absolute differences in coordinates between frames.
-This method provides a linear measure of change and is sensitive to smaller movements.
-The resulting values are directly interpretable as the magnitude of change.
-\item{"squared"}: Calculates the sum of squared differences in coordinates between frames.
-This method amplifies larger movements more significantly than smaller ones, making it
-potentially more sensitive to bursts of activity or more pronounced changes.
-It's often used when the impact of larger movements needs to be emphasized.
+  \item{"absolute"}: Calculates the sum of absolute differences in coordinates between frames.
+    This method provides a linear measure of change and is sensitive to smaller movements.
+    The resulting values are directly interpretable as the magnitude of change.
+  \item{"squared"}: Calculates the sum of squared differences in coordinates between frames.
+    This method amplifies larger movements more significantly than smaller ones, making it
+    potentially more sensitive to bursts of activity or more pronounced changes.
+    It's often used when the impact of larger movements needs to be emphasized.
 }
 Default: "absolute"}
 
@@ -62,14 +62,14 @@ Default: FALSE}
 }
 \value{
 A data.frame with motion energy values. Structure depends on
-aggregation parameters:
-\itemize{
-\item If both aggregation options TRUE: ID columns + frame + motion_energy
-\item If aggregate_coordinates FALSE: adds x_motion, y_motion columns
-\item If aggregate_keypoints FALSE: adds keypoint column
-\item If rmea_format TRUE: wide format with region*person columns only
-}
-If \code{plot = TRUE} and conditions are met, a ggplot object is also printed.
+  aggregation parameters:
+  \itemize{
+    \item If both aggregation options TRUE: ID columns + frame + motion_energy
+    \item If aggregate_coordinates FALSE: adds x_motion, y_motion columns
+    \item If aggregate_keypoints FALSE: adds keypoint column
+    \item If rmea_format TRUE: wide format with region*person columns only
+  }
+  If `plot = TRUE` and conditions are met, a ggplot object is also printed.
 }
 \description{
 Performs frame differencing analysis on OpenPose keypoint data to calculate
@@ -79,23 +79,21 @@ for each keypoint, with options for aggregation and filtering.
 }
 \details{
 The function processes OpenPose data by:
-\enumerate{
-\item Auto-detecting ID columns (if not specified) as columns that don't start with x, y, c
-\item Grouping data by the ID columns
-\item Computing frame-to-frame differences based on the chosen method
-\item Aggregating results based on user preferences
-}
+1. Auto-detecting ID columns (if not specified) as columns that don't start with x, y, c
+2. Grouping data by the ID columns
+3. Computing frame-to-frame differences based on the chosen method
+4. Aggregating results based on user preferences
 
 Motion energy is calculated as the absolute or squared difference between
 consecutive frames. When aggregating coordinates, Euclidean distance is used:
 sqrt(x_diff^2 + y_diff^2) if method is "absolute" (applied after diff), or
 x_diff^2 + y_diff^2 if method is "squared" (as diffs are already squared).
 Note: The Euclidean combination for "squared" method is implicitly handled as
-\code{sqrt((x_diff^2)^2 + (y_diff^2)^2)} if \code{aggregate_coordinates} is TRUE \emph{after} squaring,
+`sqrt((x_diff^2)^2 + (y_diff^2)^2)` if `aggregate_coordinates` is TRUE *after* squaring,
 or more commonly, the squared differences are summed directly if that's the intent.
-The current implementation applies \code{sqrt(x_motion^2 + y_motion^2)} where x_motion/y_motion
-are either \code{abs(diff)} or \code{diff^2}. For "squared" method, this means \code{sqrt((x_diff^2)^2 + (y_diff^2)^2)}.
-If the intent for "squared" is \code{sum(x_diff^2 + y_diff^2)} before sqrt, the logic in aggregation
+The current implementation applies `sqrt(x_motion^2 + y_motion^2)` where x_motion/y_motion
+are either `abs(diff)` or `diff^2`. For "squared" method, this means `sqrt((x_diff^2)^2 + (y_diff^2)^2)`.
+If the intent for "squared" is `sum(x_diff^2 + y_diff^2)` before sqrt, the logic in aggregation
 might need adjustment based on precise definition. Assuming current implementation is desired.
 
 When aggregating keypoints, values are summed
@@ -103,53 +101,6 @@ across all valid keypoints for each frame.
 }
 \note{
 The first frame of each group will have NA motion values since there's
-no previous frame for comparison. These are removed when na_action = "omit".
-Requires ggplot2 package for plotting.
-}
-\examples{
-# Create sample data matching your OpenPose structure
-set.seed(123)
-sample_data <- data.frame(
-  base_filename = rep("Dyad-1.0_A_IDs-25-27", 40),
-  frame = rep(1:10, 4),
-  region = "body",
-  person = rep(c("left", "right"), each = 20),
-  x0 = runif(40, 700, 800) + rep(1:10, 4) * 2,  # Add some motion
-  y0 = runif(40, 400, 500) + rep(1:10, 4) * 1,
-  c0 = runif(40, 0.8, 1.0),
-  x1 = runif(40, 650, 750) + rep(1:10, 4) * 1.5,
-  y1 = runif(40, 450, 550) + rep(1:10, 4) * 0.5,
-  c1 = runif(40, 0.7, 0.9),
-  x2 = runif(40, 600, 700),
-  y2 = runif(40, 500, 600),
-  c2 = runif(40, 0.6, 0.8)
-)
-
-# Basic usage - auto-detects ID columns, fully aggregated motion energy
-motion_basic <- op_compute_motionenergy(sample_data)
-head(motion_basic)
-
-# Wide format output
-motion_wide <- op_compute_motionenergy(sample_data, rmea_format = TRUE)
-head(motion_wide)
-
-\dontrun{
-# Basic usage with plotting
-# This will use 'person' for grouping in the plot by default.
-motion_basic_plot <- op_compute_motionenergy(sample_data, plot = TRUE)
-
-# Using squared method
-motion_squared_plot <- op_compute_motionenergy(sample_data, method = "squared", plot = TRUE)
-}
-
-# Keep separate x,y motion components
-motion_xy <- op_compute_motionenergy(sample_data, aggregate_coordinates = FALSE)
-head(motion_xy)
-
-# Per-keypoint analysis with separate x,y
-motion_detailed <- op_compute_motionenergy(sample_data,
-                                           aggregate_keypoints = FALSE,
-                                           aggregate_coordinates = FALSE)
-head(motion_detailed)
-
+  no previous frame for comparison. These are removed when na_action = "omit".
+  Requires ggplot2 package for plotting.
 }

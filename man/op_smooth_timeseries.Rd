@@ -4,7 +4,7 @@
 \alias{op_smooth_timeseries}
 \title{Smooth Time Series Data with Various Methods}
 \arguments{
-\item{data}{A data frame containing the time series data. Must include \code{person}, \code{time}, and keypoints (e.g., \code{x0}, \code{y0}, etc.).}
+\item{data}{A data frame containing the time series data. Must include `person`, `time`, and keypoints (e.g., `x0`, `y0`, etc.).}
 
 \item{method}{The smoothing method to use. Options are "zoo" (moving average),
 "kza" (Kalman-Ziegler Adaptive), "savitzky" (Savitzky-Golay filter),
@@ -30,17 +30,17 @@ Options are "left", "right", or "both". Default is "both".}
 \item{plot}{Logical, if TRUE, the function will generate a plot comparing the original
 and smoothed data. If FALSE, the function returns only the smoothed data frame without plotting. Default is TRUE.}
 
-\item{keypoints}{Vector of keypoint column names (e.g., \code{x0}, \code{x1}) to be smoothed and included in the plot.
-If NULL, all keypoints beginning with \code{x} or \code{y} will be smoothed and plotted. Default is NULL.}
+\item{keypoints}{Vector of keypoint column names (e.g., `x0`, `x1`) to be smoothed and included in the plot.
+If NULL, all keypoints beginning with `x` or `y` will be smoothed and plotted. Default is NULL.}
 }
 \value{
-A data frame with the smoothed time series data for the specified keypoints. If \code{plot = TRUE}, a plot is displayed comparing the original and smoothed data.
+A data frame with the smoothed time series data for the specified keypoints. If `plot = TRUE`, a plot is displayed comparing the original and smoothed data.
 }
 \description{
 This function applies different smoothing techniques to time series data
 for the selected columns (keypoints), including moving average, Kalman-Ziegler Adaptive (KZA),
 Savitzky-Golay filter, and Butterworth filter. It can optionally plot the
-smoothed data alongside the original data, with faceting based on the \code{person} and \code{keypoint} columns.
+smoothed data alongside the original data, with faceting based on the `person` and `keypoint` columns.
 }
 \examples{
 # Load example data from the package
